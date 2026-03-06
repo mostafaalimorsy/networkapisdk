@@ -7,6 +7,25 @@ This package helps teams avoid rewriting networking logic across projects and pr
 
 ---
 
+# 🤖 SDK AI Assistant
+
+An official Custom GPT assistant is available to help developers integrate and troubleshoot the SDK.
+
+Use it to:
+
+• Learn how to initialize and configure the SDK
+• Generate integration examples
+• Understand authentication, offline mode, and queue behavior
+• Debug common integration issues
+
+Open the assistant here:
+
+https://chatgpt.com/g/g-69aa3c19d9e081918dafe44ed385559c-network-api-sdk-guide
+
+The assistant is trained using the SDK documentation, architecture notes, and implementation progress.
+
+---
+
 # Table of Contents
 
 1. Overview
