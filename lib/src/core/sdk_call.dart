@@ -313,10 +313,6 @@ class SdkCall {
     // Common dart errors
     if (e is TimeoutException) return true;
 
-    // Dio exceptions (without importing dio types)
-    final typeName = e.runtimeType.toString();
-    if (typeName.contains('DioException') || typeName.contains('DioError')) return true;
-
     // String matching (dependency-free)
     return s.contains('socketexception') ||
         s.contains('timeoutexception') ||
