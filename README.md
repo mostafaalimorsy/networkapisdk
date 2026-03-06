@@ -1,365 +1,461 @@
+
+
 # Network API SDK
 
-A production‑ready networking SDK designed to standardize API communication in Flutter applications.  
-The SDK provides authentication management, request/response normalization, offline support, caching, queue persistence, interceptors, and a unified API layer.
-
-This package helps teams avoid rewriting networking logic across projects and provides a reliable, extensible integration layer between applications and backend APIs.
+A reusable Flutter networking SDK that standardizes API communication, authentication, response normalization, interceptors, offline caching, offline queueing, persistence, and queue flushing across applications.
 
 ---
 
-# 🤖 SDK AI Assistant
+## 🤖 SDK AI Assistant
 
 An official Custom GPT assistant is available to help developers integrate and troubleshoot the SDK.
 
 Use it to:
 
-• Learn how to initialize and configure the SDK
-• Generate integration examples
-• Understand authentication, offline mode, and queue behavior
-• Debug common integration issues
+- Learn SDK initialization
+- Generate integration examples
+- Understand authentication and refresh tokens
+- Debug integration problems
+- Understand offline queue behavior
 
-Open the assistant here:
+Assistant:
 
 https://chatgpt.com/g/g-69aa3c19d9e081918dafe44ed385559c-network-api-sdk-guide
-
-The assistant is trained using the SDK documentation, architecture notes, and implementation progress.
 
 ---
 
 # Table of Contents
 
-1. Overview
-2. Features
-3. Installation
-4. Quick Start
-5. SDK Initialization
-6. Making API Calls
-7. Request Bodies
-8. Authentication
-9. Interceptors
-10. Offline Mode
-11. Queue & Flush
-12. Caching
-13. Configuration Profiles
-14. Error Handling
-15. Example Usage
-16. Project Status
+1. [Overview](#1-overview)
+2. [Public API Surface](#2-public-api-surface)
+3. [Installation](#3-installation)
+4. [Importing SDK](#4-importing-sdk)
+5. [Architecture](#5-architecture)
+6. [Quick Start](#6-quick-start)
+7. [SDK Initialization](#7-sdk-initialization)
+8. [SdkConfig Reference](#8-sdkconfig-reference)
+9. [SdkProfile Reference](#9-sdkprofile-reference)
+10. [SdkContract Reference](#10-sdkcontract-reference)
+11. [OutputOptions Reference](#11-outputoptions-reference)
+12. [AuthOptions Reference](#12-authoptions-reference)
+13. [HTTP Calls](#13-http-calls)
+14. [RequestBody Types](#14-requestbody-types)
+15. [Authentication](#15-authentication)
+16. [Interceptors](#16-interceptors)
+17. [Response Model](#17-response-model)
+18. [Error Model](#18-error-model)
+19. [Events](#19-events)
+20. [Offline Support](#20-offline-support)
+21. [Persistence Stores](#21-persistence-stores)
+22. [HTTP Extension Points](#22-http-extension-points)
+23. [Example Project](#23-example-project)
+24. [Advanced Initialization](#24-advanced-initialization)
+25. [Flow Diagrams](#25-flow-diagrams)
+26. [Troubleshooting](#26-troubleshooting)
+27. [Project Status](#27-project-status)
 
 ---
 
 # 1. Overview
 
-Network API SDK is a reusable networking layer that sits between your application and backend APIs.
+Network API SDK is a standardized networking layer for Flutter applications.
 
-Instead of writing HTTP logic repeatedly in every project, the SDK provides:
+It centralizes:
 
-• Standard request structure  
-• Unified response format  
-• Authentication lifecycle management  
-• Offline support  
-• Queue persistence  
-• Extensible interceptor pipeline
+- request construction
+- response normalization
+- contract-based success/error evaluation
+- authentication lifecycle
+- interceptor execution
+- offline caching
+- offline request queue
+- persistent request queue
+- queue flushing
 
-The SDK is designed for **Flutter mobile applications**, but the architecture is portable to other platforms.
+The goal is to make API integration consistent across applications.
 
 ---
 
-# 2. Features
+# 2. Public API Surface
 
-• HTTP abstraction layer  
-• Unified request builder  
-• Response normalization  
-• Contract-based backend validation  
-• Authentication login + token refresh  
-• Automatic Authorization header injection  
-• Request/Response/Error interceptors  
-• Offline caching for GET requests  
-• Offline queue for write operations  
-• Persistent cache and queue storage  
-• Automatic queue flush
+## Core
+
+- `Sdk`
+- `SdkEvents`
+- `SdkEvent`
+
+## Configuration
+
+- `SdkConfig`
+- `SdkProfile`
+- `SdkContract`
+- `OutputOptions`
+- `AuthOptions`
+
+## Models
+
+- `RequestBody`
+- `BodyFile`
+- `BodyType`
+- `ResponseTypeHint`
+- `SdkResponse`
+- `SdkError`
+- `ResponseSource`
+- `ErrorType`
+
+## Authentication
+
+- `AuthManager`
+- `TokenStore`
+- `SecureTokenStore`
+
+## Interceptors
+
+- `SdkInterceptor`
+
+## HTTP Layer
+
+- `HttpClient`
+- `HttpRequest`
+- `HttpResponse`
+- `DioHttpClient`
+
+## Offline Layer
+
+- `CacheStore`
+- `FileCacheStore`
+- `QueueStore`
+- `FileQueueStore`
 
 ---
 
 # 3. Installation
 
-Add the SDK to your project:
+### Local dependency
 
 ```yaml
 dependencies:
-  network_api_sdk:
+  sdk_core:
     path: ../network_api_sdk
 ```
 
-or if published:
+### Published dependency
 
 ```yaml
 dependencies:
-  network_api_sdk: ^1.0.0
+  sdk_core: ^1.0.0
 ```
 
-Then run:
+Run:
 
-```
+```bash
 flutter pub get
 ```
 
 ---
 
-# 4. Quick Start
-
-Initialize the SDK once when your application starts.
+# 4. Importing SDK
 
 ```dart
-Sdk.init(
-  SdkConfig(
-    baseUrl: "https://api.example.com",
-
-    profile: SdkProfile.offlineFirstSecure(),
-
-    contract: SdkContract.auto(
-      data: "result",
-      message: "message",
-      successFlag: "succeeded",
-      errorCode: "errorCode",
-    ),
-
-    output: OutputOptions.jsonOnly(),
-  ),
-);
+import 'package:network_api_sdk/network_api_sdk.dart';
 ```
 
-Access the SDK instance:
+Always import from the package root.
 
-```dart
-final sdk = Sdk.instance;
-```
+Avoid importing from `src`.
 
 ---
 
-# 5. SDK Initialization
+# 5. Architecture
 
-The SDK must be initialized once.
+SDK architecture layers:
+
+```text
+Application Layer
+        ↓
+     SDK Core
+        ↓
+     HTTP Layer
+        ↓
+    Storage Layer
+```
+
+### SDK Core Responsibilities
+
+- Request building
+- Response normalization
+- Authentication lifecycle
+- Contract evaluation
+- Interceptors
+- Offline orchestration
+
+---
+
+# 6. Quick Start
+
+Initialize the SDK:
 
 ```dart
 Sdk.init(
   SdkConfig(
-    baseUrl: "https://api.example.com",
+    baseUrl: 'https://api.example.com',
     profile: SdkProfile.defaultSecure(),
-    contract: SdkContract.auto(),
+    contract: SdkContract.auto(
+      data: 'data',
+      message: 'message',
+      successFlag: 'isSuccess',
+      errorCode: 'code',
+    ),
     output: OutputOptions.jsonOnly(),
   ),
 );
 ```
 
-Attempting to access `Sdk.instance` before initialization will throw an error.
-
----
-
-# 5.1 Advanced SDK Configuration
-
-The SDK supports advanced configuration through `SdkConfig`. These options allow you to fully control networking behavior.
-
-Example with **all available options**:
+Example usage:
 
 ```dart
-Sdk.init(
-  SdkConfig(
-
-    // Base API URL
-    baseUrl: "https://api.example.com",
-
-    // Optional custom HTTP implementation
-    httpOverride: DioHttpClient(
-      baseUrl: "https://api.example.com",
-    ),
-
-    // Authentication configuration
-    auth: const AuthOptions(
-      loginEndpoint: "/auth/login",
-      refreshEndpoint: "/auth/refresh",
-      accessTokenPath: "accessToken",
-      refreshTokenPath: "refreshToken",
-    ),
-
-    // Token storage override (optional)
-    tokenStoreOverride: SecureTokenStore(),
-
-    // Cache storage override
-    cacheStoreOverride: FileCacheStore(
-      File("cache.json"),
-    ),
-
-    // Queue persistence storage override
-    queueStoreOverride: FileQueueStore(
-      File("queue.json"),
-    ),
-
-    // SDK behavior profile
-    profile: const SdkProfile(
-      offlineEnabled: true,
-      queueWritesWhenOffline: true,
-      autoFlushQueue: true,
-      flushInterval: Duration(seconds: 30),
-    ),
-
-    // API response contract configuration
-    contract: SdkContract.auto(
-      data: "result",
-      message: "message",
-      successFlag: "succeeded",
-      errorCode: "errorCode",
-    ),
-
-    // Output behavior
-    output: OutputOptions.jsonOnly(),
-
-    // Optional interceptors
-    interceptors: [
-      AddHeaderInterceptor(),
-    ],
-  ),
-);
+final response = await Sdk.instance.call.get('/profile');
 ```
 
 ---
 
-## SdkConfig Fields
+# 7. SDK Initialization
 
-| Option | Description |
-|------|-------------|
-| baseUrl | Base URL for all API requests |
-| httpOverride | Custom HTTP client implementation |
-| auth | Authentication configuration (login + refresh endpoints) |
-| tokenStoreOverride | Custom token storage implementation |
-| cacheStoreOverride | Custom cache storage provider |
-| queueStoreOverride | Custom request queue storage |
-| profile | Controls offline + queue behavior |
-| contract | Defines how API responses are interpreted |
-| output | Controls response normalization behavior |
-| interceptors | List of request/response interceptors |
+Initialize once:
+
+```dart
+Sdk.init(SdkConfig(...));
+```
+
+Access instance:
+
+```dart
+Sdk.instance
+```
+
+Available modules:
+
+- `Sdk.instance.call`
+- `Sdk.instance.auth`
+- `Sdk.instance.events`
+- `Sdk.instance.http`
+- `Sdk.instance.cache`
+- `Sdk.instance.queue`
+- `Sdk.instance.config`
 
 ---
 
-## Advanced Profile Options
+# 8. SdkConfig Reference
 
-The SDK behavior is controlled by `SdkProfile`.
+Primary SDK configuration.
+
+Example:
+
+```dart
+SdkConfig(
+  baseUrl: 'https://api.example.com',
+  profile: SdkProfile.defaultSecure(),
+  contract: SdkContract.auto(),
+  output: OutputOptions.jsonOnly(),
+)
+```
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `baseUrl` | `String` | Yes | API base URL |
+| `httpOverride` | `HttpClient?` | No | Custom HTTP client |
+| `auth` | `AuthOptions?` | No | Authentication configuration |
+| `tokenStoreOverride` | `TokenStore?` | No | Custom token storage |
+| `cacheStoreOverride` | `CacheStore?` | No | Custom cache store |
+| `queueStoreOverride` | `QueueStore?` | No | Custom queue store |
+| `profile` | `SdkProfile` | Yes | Offline configuration |
+| `contract` | `SdkContract` | Yes | API contract |
+| `output` | `OutputOptions` | Yes | Response normalization |
+| `interceptors` | `List<SdkInterceptor>?` | No | SDK interceptors |
+
+---
+
+# 9. SdkProfile Reference
+
+Controls offline behavior.
 
 ```dart
 const SdkProfile(
   offlineEnabled: true,
   queueWritesWhenOffline: true,
   autoFlushQueue: true,
-  flushInterval: Duration(seconds: 30),
+  flushInterval: null,
 )
 ```
 
-### Options
+| Field | Type | Description |
+|------|------|-------------|
+| `offlineEnabled` | `bool` | Enable offline features |
+| `queueWritesWhenOffline` | `bool` | Queue writes when offline |
+| `autoFlushQueue` | `bool` | Auto flush queue |
+| `flushInterval` | `Duration?` | Periodic flush interval |
 
-| Option | Description |
-|------|-------------|
-| offlineEnabled | Enables offline cache + queue features |
-| queueWritesWhenOffline | Allows write requests to be queued when offline |
-| autoFlushQueue | Automatically flush queued requests |
-| flushInterval | Optional periodic flush interval |
-
----
----
-
-# 6. Making API Calls
-
-GET request:
+Factories:
 
 ```dart
-final res = await Sdk.instance.call.get("/users");
+SdkProfile.defaultSecure();
+SdkProfile.offlineFirstSecure();
 ```
 
-POST request:
+---
+
+# 10. SdkContract Reference
+
+Defines backend response structure.
 
 ```dart
-final res = await Sdk.instance.call.post(
-  "/login",
-  body: RequestBody.json({"email": "a@b.com", "password": "123"}),
+SdkContract.auto(
+  data: 'data',
+  message: 'message',
+  successFlag: 'isSuccess',
+  errorCode: 'code',
+)
+```
+
+Fallback error path:
+
+```text
+errors[0].message
+```
+
+---
+
+# 11. OutputOptions Reference
+
+Controls SDK output format.
+
+```dart
+OutputOptions.jsonOnly();
+```
+
+Advanced:
+
+```dart
+OutputOptions.jsonOnly(
+  tryParseJsonText: true,
+  bytesMode: BytesJsonMode.base64,
 );
 ```
 
-PUT request:
+---
+
+# 12. AuthOptions Reference
 
 ```dart
-await Sdk.instance.call.put("/profile", body: RequestBody.json(data));
+AuthOptions(
+  loginEndpoint: '/auth/login',
+  refreshEndpoint: '/auth/refresh',
+  accessTokenPath: 'accessToken',
+  refreshTokenPath: 'refreshToken',
+);
 ```
 
-DELETE request:
-
-```dart
-await Sdk.instance.call.delete("/session");
-```
+| Field | Type | Description |
+|------|------|-------------|
+| `loginEndpoint` | `String` | Login API |
+| `refreshEndpoint` | `String` | Refresh API |
+| `accessTokenPath` | `String` | Access token path |
+| `refreshTokenPath` | `String` | Refresh token path |
+| `refreshRequestKey` | `String?` | Optional refresh body key |
 
 ---
 
-# 7. Request Bodies
+# 13. HTTP Calls
 
-Supported body types:
-
-JSON
+Main entry:
 
 ```dart
-RequestBody.json({...})
+Sdk.instance.call
 ```
 
-Text
+Methods:
+
+- `get`
+- `post`
+- `put`
+- `delete`
+- `any`
+
+Example:
 
 ```dart
-RequestBody.text("hello")
+final res = await Sdk.instance.call.get('/users');
 ```
 
-Binary
+### HTTP Call Parameters
 
-```dart
-RequestBody.bytes(data)
-```
-
-Form URL encoded
-
-```dart
-RequestBody.formUrlEncoded({"a":1})
-```
-
-Multipart
-
-```dart
-RequestBody.multipart(
-  fields: {"name": "file"},
-  files: {
-    "file": BodyFile(
-      filename: "image.jpg",
-      bytes: imageBytes,
-    )
-  }
-)
-```
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `endpoint` | `String` | Yes | API endpoint path |
+| `query` | `Map<String, dynamic>?` | No | Query parameters |
+| `headers` | `Map<String, String>?` | No | Request headers |
+| `body` | `RequestBody?` | No | Request payload |
+| `responseType` | `ResponseTypeHint?` | No | Expected response type |
+| `attachAuth` | `bool` | No | Whether to attach bearer token |
 
 ---
 
-# 8. Authentication
+# 14. RequestBody Types
+
+Constructors:
+
+```dart
+RequestBody.none()
+RequestBody.json()
+RequestBody.text()
+RequestBody.bytes()
+RequestBody.formUrlEncoded()
+RequestBody.multipart()
+```
+
+Example:
+
+```dart
+RequestBody.json({
+  'email': 'a@b.com',
+});
+```
+
+### BodyFile
+
+Used in multipart uploads.
+
+| Field | Type | Description |
+|------|------|-------------|
+| `filename` | `String` | File name |
+| `bytes` | `Uint8List` | File data |
+| `contentType` | `String?` | MIME type |
+
+---
+
+# 15. Authentication
 
 Login example:
 
 ```dart
-final res = await Sdk.instance.auth.login(
+await Sdk.instance.auth.login(
   body: {
-    "username": "user",
-    "password": "123"
+    'username': 'user',
+    'password': 'password',
   },
+  rememberMe: true,
 );
 ```
 
-After login the SDK automatically:
+### Login parameters
 
-• Saves tokens
-• Attaches Authorization headers
-• Refreshes expired tokens
+| Parameter | Type | Description |
+|----------|------|-------------|
+| `body` | `Map` | Login payload |
+| `headers` | `Map?` | Extra headers |
+| `rememberMe` | `bool` | Persist tokens |
 
-Logout:
+### Sign Out
 
 ```dart
 await Sdk.instance.auth.signOut();
@@ -367,169 +463,273 @@ await Sdk.instance.auth.signOut();
 
 ---
 
-# 9. Interceptors
-
-Interceptors allow modifying requests and responses.
+# 16. Interceptors
 
 Example:
 
 ```dart
-class AddHeaderInterceptor implements SdkInterceptor {
+class MyInterceptor implements SdkInterceptor {
+  @override
+  Future<HttpRequest?> onRequest(HttpRequest req) async => req;
 
   @override
-  Future<HttpRequest?> onRequest(HttpRequest req) async {
-    return req.copyWith(
-      headers: {...?req.headers, "X-App": "mobile"},
-    );
-  }
+  Future<HttpResponse?> onResponse(HttpRequest req, HttpResponse res) async => res;
 
   @override
-  Future<HttpResponse?> onResponse(HttpRequest req, HttpResponse res) async {
-    return res;
-  }
-
-  @override
-  Future<SdkError?> onError(HttpRequest req, SdkError error) async {
-    return error;
-  }
+  Future<SdkError?> onError(HttpRequest req, SdkError error) async => error;
 }
 ```
 
-Register interceptors in config:
+Register:
 
 ```dart
 interceptors: [
-  AddHeaderInterceptor(),
+  MyInterceptor(),
 ]
 ```
 
 ---
 
-# 10. Offline Mode
+# 17. Response Model
 
-When offline the SDK can:
+SDK responses return `SdkResponse`.
 
-• Return cached GET responses  
-• Queue write requests
-
-Offline mode is enabled via profile:
+Example:
 
 ```dart
-profile: SdkProfile.offlineFirstSecure()
+if (res.ok) {
+  print(res.data);
+}
 ```
+
+| Field | Type |
+|------|------|
+| `ok` | `bool` |
+| `data` | `dynamic` |
+| `error` | `SdkError?` |
+| `statusCode` | `int` |
+| `message` | `String?` |
+| `source` | `ResponseSource` |
+
+### ResponseSource
+
+- `network`
+- `cache`
+- `queued`
 
 ---
 
-# 11. Queue & Flush
+# 18. Error Model
 
-Write operations performed while offline are queued.
+SDK errors return `SdkError`.
 
-Flush manually:
+| Field | Type |
+|------|------|
+| `type` | `ErrorType` |
+| `message` | `String` |
+| `statusCode` | `int?` |
+| `raw` | `dynamic` |
+
+### ErrorType
+
+- `offline`
+- `timeout`
+- `unauthorized`
+- `forbidden`
+- `badRequest`
+- `server`
+- `contract`
+- `parse`
+- `unknown`
+
+---
+
+# 19. Events
+
+Listen:
+
+```dart
+Sdk.instance.events.stream.listen((event) {
+  // handle event
+});
+```
+
+Events:
+
+- `sessionExpired`
+- `signedOut`
+
+---
+
+# 20. Offline Support
+
+When enabled:
+
+- GET → cache fallback
+- WRITE → queued request
+
+Manual queue flush:
 
 ```dart
 await Sdk.instance.queue.flush();
 ```
 
-Flush also happens automatically depending on SDK profile configuration.
+---
+
+# 21. Persistence Stores
+
+Tokens
+
+- `TokenStore`
+- `SecureTokenStore`
+
+Cache
+
+- `CacheStore`
+- `FileCacheStore`
+
+Queue
+
+- `QueueStore`
+- `FileQueueStore`
 
 ---
 
-# 12. Caching
+# 22. HTTP Extension Points
 
-Successful GET responses can be cached.
-
-Cached responses are used when:
-
-• Network fails  
-• Device is offline
-
-Custom cache stores can also be implemented.
-
----
-
-# 13. Configuration Profiles
-
-Profiles control SDK behavior.
-
-Example:
+Default client:
 
 ```dart
-SdkProfile.offlineFirstSecure()
+DioHttpClient
 ```
 
-Configuration options include:
-
-• offlineEnabled  
-• queueWritesWhenOffline  
-• autoFlushQueue  
-• flushInterval
-
----
-
-# 14. Error Handling
-
-Responses are normalized into a unified structure.
-
-Example:
+Constructor:
 
 ```dart
-if (response.ok) {
-  print(response.data);
-} else {
-  print(response.error?.message);
-}
-```
-
-Error types include:
-
-• Network errors  
-• Contract errors  
-• Backend errors
-
----
-
-# 15. Example Usage
-
-Typical flow:
-
-```dart
-await Sdk.instance.auth.login(body: credentials);
-
-final profile = await Sdk.instance.call.get("/profile");
-
-await Sdk.instance.call.post(
-  "/orders",
-  body: RequestBody.json(orderData),
+DioHttpClient(
+  baseUrl: 'https://api.example.com',
+  connectTimeout: Duration(seconds: 20),
+  receiveTimeout: Duration(seconds: 30),
 );
 ```
 
 ---
 
-# 16. Project Status
+# 23. Example Project
 
-Current implementation progress:
+Located in:
 
-Completed
+```text
+/example
+```
 
-• SDK core architecture  
-• HTTP abstraction  
-• Request normalization  
-• Authentication lifecycle  
-• Interceptor system  
-• Offline caching  
-• Offline queue  
-• Disk persistence
+Run:
 
-Planned improvements
-
-• Retry policies  
-• Backoff strategies  
-• Observability and metrics  
-• Upload/download progress  
-• Advanced cache strategies
+```bash
+cd example
+flutter pub get
+flutter run
+```
 
 ---
 
-# License
+# 24. Advanced Initialization
 
-Internal / proprietary SDK unless published publicly.
+Offline-first configuration:
+
+```dart
+Sdk.init(
+  SdkConfig(
+    baseUrl: 'https://api.example.com',
+    profile: SdkProfile.offlineFirstSecure(),
+    contract: SdkContract.auto(),
+    output: OutputOptions.jsonOnly(),
+  ),
+);
+```
+
+---
+
+# 25. Flow Diagrams
+
+Authentication flow:
+
+```text
+Login
+ ↓
+Save Tokens
+ ↓
+Attach Bearer
+ ↓
+401
+ ↓
+Refresh
+ ↓
+Retry Request
+```
+
+Offline queue flow:
+
+```text
+Write Request
+ ↓
+No Internet
+ ↓
+Queue
+ ↓
+Persist
+ ↓
+Flush Later
+```
+
+---
+
+# 26. Troubleshooting
+
+SDK not initialized:
+
+```dart
+Sdk.init(
+  SdkConfig(
+    baseUrl: 'https://api.example.com',
+    profile: SdkProfile.defaultSecure(),
+    contract: SdkContract.auto(),
+    output: OutputOptions.jsonOnly(),
+  ),
+);
+```
+
+Refresh token failing:
+
+Check:
+
+- `refreshEndpoint`
+- `refreshTokenPath`
+- `accessTokenPath`
+
+---
+
+# 27. Project Status
+
+## Implemented
+
+- SDK initialization
+- contract parsing
+- authentication login
+- refresh token
+- bearer token attach
+- interceptors
+- offline cache
+- offline queue
+- queue persistence
+- manual queue flush
+- auto flush on init
+- SDK events
+
+## Planned
+
+- retry policies
+- observability
+- upload progress
+- cache invalidation
+- advanced queue policies
