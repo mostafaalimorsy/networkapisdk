@@ -20,7 +20,7 @@ class ContractEvaluator {
       final bodyOk = contract.isBodySuccess(rawJson, statusCode);
       final ok = statusOk && bodyOk;
 
-      final message = _readPath(rawJson, contract.messagePath)?.toString();
+      final message = _resolveMessage(rawJson);
 
       if (!ok) {
         return SdkResponse(
@@ -74,6 +74,25 @@ class ContractEvaluator {
     );
   }
 
+  String? _resolveMessage(Map<String, dynamic> json) {
+    final direct = _readPath(json, contract.messagePath)?.toString();
+    if (direct != null && direct.trim().isNotEmpty) {
+      return direct;
+    }
+
+    final errors = json['errors'];
+    if (errors is List && errors.isNotEmpty) {
+      final first = errors.first;
+      if (first is Map<String, dynamic>) {
+        final nested = first['message']?.toString();
+        if (nested != null && nested.trim().isNotEmpty) {
+          return nested;
+        }
+      }
+    }
+
+    return null;
+  }
   dynamic _readPath(Map<String, dynamic> json, String path) {
     if (path.isEmpty) return null;
     final parts = path.split('.');
