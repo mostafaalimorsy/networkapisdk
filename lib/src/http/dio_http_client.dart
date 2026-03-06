@@ -16,6 +16,7 @@ class DioHttpClient implements HttpClient {
       baseUrl: baseUrl,
       connectTimeout: connectTimeout,
       receiveTimeout: receiveTimeout,
+      validateStatus: (_) => true,
     ),
   );
 
