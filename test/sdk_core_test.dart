@@ -2,15 +2,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:sdk_core/sdk_core.dart';
 import 'package:sdk_core/src/http/http_client.dart';
+import 'dart:io';
 
+import 'package:sdk_core/src/offline/file_cache_store.dart';
+import 'package:sdk_core/src/offline/file_queue_store.dart';
 
 class MockHttpClient extends Mock implements HttpClient {}
-HttpRequest _captureRequest(Invocation inv) {
+
+HttpRequest captureRequest(Invocation inv) {
   return inv.positionalArguments.first as HttpRequest;
 }
 
 class FakeTokenStore implements TokenStore {
   TokenPair? saved;
+
   @override
   Future<void> save(TokenPair tokens, {required bool rememberMe}) async {
     saved = tokens;
@@ -24,28 +29,28 @@ class FakeTokenStore implements TokenStore {
     saved = null;
   }
 }
+
 class AddHeaderInterceptor implements SdkInterceptor {
   @override
-  Future<HttpRequest> onRequest(HttpRequest req) async {
-    final h = <String, String>{...?(req.headers as Map?)?.cast<String, String>()};
-    h['X-From-Interceptor'] = 'YES';
+  Future<HttpRequest?> onRequest(HttpRequest req) async {
+    final current = req.headers ?? const <String, String>{};
+    final h = <String, String>{...current, 'X-From-Interceptor': 'YES'};
     return req.copyWith(headers: h);
   }
 
   @override
-  Future<HttpResponse> onResponse(HttpRequest req, HttpResponse res) async => res;
+  Future<HttpResponse?> onResponse(HttpRequest req, HttpResponse res) async => res;
 
   @override
-  Future<SdkError> onError(HttpRequest req, SdkError error) async => error;
+  Future<SdkError?> onError(HttpRequest req, SdkError error) async => error;
 }
-
 
 class PatchResponseInterceptor implements SdkInterceptor {
   @override
-  Future<HttpRequest> onRequest(HttpRequest req) async => req;
+  Future<HttpRequest?> onRequest(HttpRequest req) async => req;
 
   @override
-  Future<HttpResponse> onResponse(HttpRequest req, HttpResponse res) async {
+  Future<HttpResponse?> onResponse(HttpRequest req, HttpResponse res) async {
     final root = Map<String, dynamic>.from(res.data as Map);
 
     final resultAny = root['result'];
@@ -54,7 +59,6 @@ class PatchResponseInterceptor implements SdkInterceptor {
       result['patched'] = true;
       root['result'] = result;
     } else {
-      // If there is no map result, fall back to patching the root
       root['patched'] = true;
     }
 
@@ -62,29 +66,30 @@ class PatchResponseInterceptor implements SdkInterceptor {
   }
 
   @override
-  Future<SdkError> onError(HttpRequest req, SdkError error) async => error;
+  Future<SdkError?> onError(HttpRequest req, SdkError error) async => error;
 }
 
 class PatchErrorInterceptor implements SdkInterceptor {
   @override
-  Future<HttpRequest> onRequest(HttpRequest req) async => req;
+  Future<HttpRequest?> onRequest(HttpRequest req) async => req;
 
   @override
-  Future<HttpResponse> onResponse(HttpRequest req, HttpResponse res) async => res;
+  Future<HttpResponse?> onResponse(HttpRequest req, HttpResponse res) async => res;
 
   @override
-  Future<SdkError> onError(HttpRequest req, SdkError error) async {
-    // Make sure we can patch the message in a deterministic way for tests
+  Future<SdkError?> onError(HttpRequest req, SdkError error) async {
     return SdkError(
       type: error.type,
       message: 'Friendly: ${req.endpoint}',
     );
   }
 }
+
 void main() {
   setUpAll(() {
+    // mocktail fallback for any() HttpRequest
     registerFallbackValue(
-      const HttpRequest(
+      HttpRequest(
         endpoint: '/__dummy__',
         method: 'GET',
         body: RequestBody.none(),
@@ -95,7 +100,6 @@ void main() {
 
   group('Step 1 - SDK skeleton', () {
     setUp(() {
-      // Reset singleton before each test (requires resetForTest in Sdk)
       Sdk.resetForTest();
     });
 
@@ -121,12 +125,10 @@ void main() {
 
       final sdk = Sdk.instance;
 
-      // Config is present
       expect(sdk.config.baseUrl, 'https://api.example.com');
       expect(sdk.config.profile.offlineEnabled, isTrue);
       expect(sdk.config.profile.queueWritesWhenOffline, isTrue);
 
-      // Core modules are wired
       expect(sdk.call, isNotNull);
       expect(sdk.auth, isNotNull);
       expect(sdk.events, isNotNull);
@@ -134,9 +136,7 @@ void main() {
   });
 
   group('Step 2 - HTTP layer wiring', () {
-    setUp(() {
-      Sdk.resetForTest();
-    });
+    setUp(() => Sdk.resetForTest());
 
     test('Sdk.init initializes http client', () {
       Sdk.init(
@@ -153,8 +153,6 @@ void main() {
       );
 
       final sdk = Sdk.instance;
-
-      // HTTP client should be initialized
       expect(sdk.http, isNotNull);
     });
   });
@@ -165,7 +163,7 @@ void main() {
     test('GET returns ok=true and extracts data via contract', () async {
       final mockHttp = MockHttpClient();
 
-      when(() => mockHttp.send(any())).thenAnswer((invocation) async {
+      when(() => mockHttp.send(any())).thenAnswer((_) async {
         return const HttpResponse(
           statusCode: 200,
           headers: {},
@@ -258,7 +256,6 @@ void main() {
           httpOverride: mockHttp,
           tokenStoreOverride: FakeTokenStore(),
           profile: SdkProfile.defaultSecure(),
-          // هنا contract success by status فقط (body مش Map)
           contract: SdkContract.auto(
             data: 'result',
             message: 'message',
@@ -267,7 +264,10 @@ void main() {
         ),
       );
 
-      final res = await Sdk.instance.call.get('/ping', responseType: ResponseTypeHint.text);
+      final res = await Sdk.instance.call.get(
+        '/ping',
+        responseType: ResponseTypeHint.text,
+      );
 
       expect(res.ok, isTrue);
       expect(res.data, isA<Map>());
@@ -275,16 +275,16 @@ void main() {
       expect(res.data['value'], 'plain text');
     });
   });
+
   group('Step 3.3 - Methods + Body types', () {
     setUp(() => Sdk.resetForTest());
 
     test('POST sends JSON body', () async {
       final mockHttp = MockHttpClient();
-
       late HttpRequest captured;
 
       when(() => mockHttp.send(any())).thenAnswer((inv) async {
-        captured = _captureRequest(inv);
+        captured = captureRequest(inv);
         return const HttpResponse(
           statusCode: 200,
           headers: {},
@@ -324,7 +324,7 @@ void main() {
       late HttpRequest captured;
 
       when(() => mockHttp.send(any())).thenAnswer((inv) async {
-        captured = _captureRequest(inv);
+        captured = captureRequest(inv);
         return const HttpResponse(
           statusCode: 200,
           headers: {},
@@ -363,7 +363,7 @@ void main() {
       late HttpRequest captured;
 
       when(() => mockHttp.send(any())).thenAnswer((inv) async {
-        captured = _captureRequest(inv);
+        captured = captureRequest(inv);
         return const HttpResponse(
           statusCode: 200,
           headers: {},
@@ -394,6 +394,7 @@ void main() {
       expect(captured.body.type, BodyType.none);
     });
   });
+
   group('Step 4.2 - Auth login', () {
     setUp(() => Sdk.resetForTest());
 
@@ -450,6 +451,7 @@ void main() {
       expect(tokenStore.saved!.refreshToken, 'REFRESH');
     });
   });
+
   group('Step 4.3-A - Auto attach token', () {
     setUp(() => Sdk.resetForTest());
 
@@ -457,7 +459,6 @@ void main() {
       final mockHttp = MockHttpClient();
       final tokenStore = FakeTokenStore();
 
-      // save tokens first
       await tokenStore.save(
         const TokenPair(accessToken: 'ACCESS_123', refreshToken: 'REFRESH_123'),
         rememberMe: true,
@@ -466,7 +467,7 @@ void main() {
       late HttpRequest captured;
 
       when(() => mockHttp.send(any())).thenAnswer((inv) async {
-        captured = inv.positionalArguments.first as HttpRequest;
+        captured = captureRequest(inv);
         return const HttpResponse(
           statusCode: 200,
           headers: {},
@@ -514,7 +515,7 @@ void main() {
       late HttpRequest captured;
 
       when(() => mockHttp.send(any())).thenAnswer((inv) async {
-        captured = inv.positionalArguments.first as HttpRequest;
+        captured = captureRequest(inv);
         return const HttpResponse(
           statusCode: 200,
           headers: {},
@@ -549,6 +550,7 @@ void main() {
       expect(captured.headers?['Authorization'], isNull);
     });
   });
+
   group('Step 4.3-B - Refresh token + retry', () {
     setUp(() => Sdk.resetForTest());
 
@@ -556,7 +558,6 @@ void main() {
       final mockHttp = MockHttpClient();
       final tokenStore = FakeTokenStore();
 
-      // start with OLD tokens
       await tokenStore.save(
         const TokenPair(accessToken: 'OLD_ACCESS', refreshToken: 'REFRESH_1'),
         rememberMe: true,
@@ -565,11 +566,10 @@ void main() {
       int protectedCalls = 0;
 
       when(() => mockHttp.send(any())).thenAnswer((inv) async {
-        final req = inv.positionalArguments.first as HttpRequest;
+        final req = captureRequest(inv);
 
         if (req.endpoint == '/protected') {
           protectedCalls++;
-          // first time -> 401, second time -> 200
           if (protectedCalls == 1) {
             return const HttpResponse(statusCode: 401, headers: {}, data: {
               "succeeded": false,
@@ -587,7 +587,6 @@ void main() {
         }
 
         if (req.endpoint == '/auth/refresh') {
-          // refresh returns NEW tokens
           return const HttpResponse(statusCode: 200, headers: {}, data: {
             "succeeded": true,
             "errorCode": 0,
@@ -628,8 +627,6 @@ void main() {
 
       expect(res.ok, isTrue);
       expect(res.data['x'], 1);
-
-      // tokens should be updated
       expect(tokenStore.saved!.accessToken, 'NEW_ACCESS');
       expect(tokenStore.saved!.refreshToken, 'NEW_REFRESH');
     });
@@ -646,10 +643,9 @@ void main() {
       int refreshCalls = 0;
 
       when(() => mockHttp.send(any())).thenAnswer((inv) async {
-        final req = inv.positionalArguments.first as HttpRequest;
+        final req = captureRequest(inv);
 
         if (req.endpoint == '/protected') {
-          // Always return 401 first time until refresh completes, then OK.
           final auth = req.headers?['Authorization'] ?? '';
           if (auth.contains('NEW_ACCESS')) {
             return const HttpResponse(statusCode: 200, headers: {}, data: {
@@ -669,7 +665,6 @@ void main() {
 
         if (req.endpoint == '/auth/refresh') {
           refreshCalls++;
-          // simulate refresh success
           return const HttpResponse(statusCode: 200, headers: {}, data: {
             "succeeded": true,
             "errorCode": 0,
@@ -706,7 +701,6 @@ void main() {
         ),
       );
 
-      // fire 3 calls in parallel
       final results = await Future.wait([
         Sdk.instance.call.get('/protected'),
         Sdk.instance.call.get('/protected'),
@@ -718,9 +712,10 @@ void main() {
         expect(r.data['ok'], true);
       }
 
-      expect(refreshCalls, 1); // ✅ single-flight تحقق
+      expect(refreshCalls, 1);
     });
   });
+
   group('Step 4.4 - Refresh failure + session expired event', () {
     setUp(() => Sdk.resetForTest());
 
@@ -737,7 +732,7 @@ void main() {
       int refreshCalls = 0;
 
       when(() => mockHttp.send(any())).thenAnswer((inv) async {
-        final req = inv.positionalArguments.first as HttpRequest;
+        final req = captureRequest(inv);
 
         if (req.endpoint == '/protected') {
           protectedCalls++;
@@ -792,9 +787,9 @@ void main() {
 
       expect(res.ok, isFalse);
       expect(refreshCalls, 1);
-      expect(protectedCalls, 1); // no retry when refresh failed
-      expect(tokenStore.saved, isNull); // cleared
-      expect(events, contains(SdkEvent.sessionExpired)); // emitted
+      expect(protectedCalls, 1);
+      expect(tokenStore.saved, isNull);
+      expect(events, contains(SdkEvent.sessionExpired));
     });
 
     test('if refresh succeeds but retry is still 401, it clears tokens and emits sessionExpired', () async {
@@ -810,7 +805,7 @@ void main() {
       int refreshCalls = 0;
 
       when(() => mockHttp.send(any())).thenAnswer((inv) async {
-        final req = inv.positionalArguments.first as HttpRequest;
+        final req = captureRequest(inv);
 
         if (req.endpoint == '/protected') {
           protectedCalls++;
@@ -868,11 +863,12 @@ void main() {
 
       expect(res.ok, isFalse);
       expect(refreshCalls, 1);
-      expect(protectedCalls, 2); // retried once
-      expect(tokenStore.saved, isNull); // cleared after retry still 401
-      expect(events, contains(SdkEvent.sessionExpired)); // emitted
+      expect(protectedCalls, 2);
+      expect(tokenStore.saved, isNull);
+      expect(events, contains(SdkEvent.sessionExpired));
     });
   });
+
   group('Step 4.5 - Sign out', () {
     setUp(() => Sdk.resetForTest());
 
@@ -915,6 +911,7 @@ void main() {
       expect(events, contains(SdkEvent.signedOut));
     });
   });
+
   group('Step 4.6 - Token persistence on init', () {
     setUp(() => Sdk.resetForTest());
 
@@ -922,7 +919,6 @@ void main() {
       final mockHttp = MockHttpClient();
       final tokenStore = FakeTokenStore();
 
-      // simulate previously saved tokens BEFORE init
       await tokenStore.save(
         const TokenPair(accessToken: 'PERSISTED_ACCESS', refreshToken: 'PERSISTED_REFRESH'),
         rememberMe: true,
@@ -931,7 +927,7 @@ void main() {
       late HttpRequest captured;
 
       when(() => mockHttp.send(any())).thenAnswer((inv) async {
-        captured = inv.positionalArguments.first as HttpRequest;
+        captured = captureRequest(inv);
         return const HttpResponse(
           statusCode: 200,
           headers: {},
@@ -961,6 +957,7 @@ void main() {
       expect(captured.headers?['Authorization'], 'Bearer PERSISTED_ACCESS');
     });
   });
+
   group('Step 5.1 - Interceptors', () {
     setUp(() => Sdk.resetForTest());
 
@@ -969,7 +966,7 @@ void main() {
       late HttpRequest captured;
 
       when(() => mockHttp.send(any())).thenAnswer((inv) async {
-        captured = inv.positionalArguments.first as HttpRequest;
+        captured = captureRequest(inv);
         return const HttpResponse(
           statusCode: 200,
           headers: {},
@@ -1035,8 +1032,6 @@ void main() {
       final res = await Sdk.instance.call.get('/any');
 
       expect(res.ok, isTrue);
-      // لأن interceptor عدّل الـ HttpResponse قبل normalization
-      // فهتلاقي patched وصلت للي تحت
       expect(res.data, isA<Map>());
       expect((res.data as Map)['patched'], true);
     });
@@ -1077,13 +1072,13 @@ void main() {
       verify(() => mockHttp.send(any())).called(1);
     });
   });
+
   group('Step 6.1 - Offline GET uses cache', () {
     setUp(() => Sdk.resetForTest());
 
     test('when offline, GET returns cached response if exists', () async {
       final mockHttp = MockHttpClient();
 
-      // First call online -> success
       when(() => mockHttp.send(any())).thenAnswer((_) async {
         return const HttpResponse(
           statusCode: 200,
@@ -1102,7 +1097,7 @@ void main() {
           baseUrl: 'https://api.example.com',
           httpOverride: mockHttp,
           tokenStoreOverride: FakeTokenStore(),
-          profile: SdkProfile.offlineFirstSecure(), // ✅ offline enabled
+          profile: SdkProfile.offlineFirstSecure(),
           contract: SdkContract.auto(
             data: 'result',
             message: 'message',
@@ -1113,15 +1108,12 @@ void main() {
         ),
       );
 
-      // Online first (cache it)
       final r1 = await Sdk.instance.call.get('/me');
       expect(r1.ok, isTrue);
       expect(r1.data['x'], 1);
 
-      // Now simulate offline (throw)
       when(() => mockHttp.send(any())).thenThrow(Exception('offline'));
 
-      // Offline should return cached
       final r2 = await Sdk.instance.call.get('/me');
       expect(r2.ok, isTrue);
       expect(r2.data['x'], 1);
@@ -1141,7 +1133,7 @@ void main() {
           baseUrl: 'https://api.example.com',
           httpOverride: mockHttp,
           tokenStoreOverride: FakeTokenStore(),
-          profile: SdkProfile.offlineFirstSecure(), // ✅ queueWritesWhenOffline=true
+          profile: SdkProfile.offlineFirstSecure(),
           contract: SdkContract.auto(
             data: 'result',
             message: 'message',
@@ -1157,7 +1149,6 @@ void main() {
         body: RequestBody.json({"a": 1}),
       );
 
-      // queued but not failed
       expect(res.ok, isTrue);
       expect(res.data, isA<Map>());
       expect(res.data['queued'], true);
@@ -1170,7 +1161,6 @@ void main() {
     test('flush sends queued requests in order and clears queue on success', () async {
       final mockHttp = MockHttpClient();
 
-      // Start offline
       when(() => mockHttp.send(any())).thenThrow(Exception('offline'));
 
       Sdk.init(
@@ -1189,7 +1179,6 @@ void main() {
         ),
       );
 
-      // Queue 2 writes
       final r1 = await Sdk.instance.call.post('/a', body: RequestBody.json({"x": 1}));
       final r2 = await Sdk.instance.call.put('/b', body: RequestBody.json({"y": 2}));
 
@@ -1198,9 +1187,8 @@ void main() {
       expect(r2.ok, isTrue);
       expect((r2.data as Map)['queued'], true);
 
-      // Now go online: return OK for any queued request
       int calls = 0;
-      when(() => mockHttp.send(any())).thenAnswer((inv) async {
+      when(() => mockHttp.send(any())).thenAnswer((_) async {
         calls++;
         return const HttpResponse(
           statusCode: 200,
@@ -1213,9 +1201,276 @@ void main() {
       expect(flushed, 2);
       expect(calls, 2);
 
-      // Flush again should do nothing
       final flushed2 = await Sdk.instance.queue.flush();
       expect(flushed2, 0);
     });
   });
+  group('Step 7 - Persistence (File cache + File queue) + AutoFlush', () {
+    late Directory tempDir;
+    late File cacheFile;
+    late File queueFile;
+
+    setUp(() async {
+      Sdk.resetForTest();
+
+      tempDir = await Directory.systemTemp.createTemp('sdk_core_step7_');
+      cacheFile = File('${tempDir.path}/cache.json');
+      queueFile = File('${tempDir.path}/queue.json');
+    });
+
+    tearDown(() async {
+      try {
+        await tempDir.delete(recursive: true);
+      } catch (_) {}
+    });
+
+    test('7.1 Cache persists across SDK restart (GET cached when offline)', () async {
+      final mockHttp = MockHttpClient();
+
+      // First call online -> success
+      when(() => mockHttp.send(any())).thenAnswer((_) async {
+        return const HttpResponse(
+          statusCode: 200,
+          headers: {},
+          data: {
+            "succeeded": true,
+            "errorCode": 0,
+            "message": "OK",
+            "result": {"x": 99}
+          },
+        );
+      });
+
+      // Init with FILE stores
+      Sdk.init(
+        SdkConfig(
+          baseUrl: 'https://api.example.com',
+          httpOverride: mockHttp,
+          tokenStoreOverride: FakeTokenStore(),
+          cacheStoreOverride: FileCacheStore(cacheFile),
+          queueStoreOverride: FileQueueStore(queueFile),
+          profile: const SdkProfile(
+            offlineEnabled: true,
+            queueWritesWhenOffline: true,
+            autoFlushQueue: false,
+            flushInterval: null,
+          ),
+          contract: SdkContract.auto(
+            data: 'result',
+            message: 'message',
+            successFlag: 'succeeded',
+            errorCode: 'errorCode',
+          ),
+          output: OutputOptions.jsonOnly(),
+        ),
+      );
+
+      final r1 = await Sdk.instance.call.get('/me');
+      expect(r1.ok, isTrue);
+      expect(r1.data['x'], 99);
+
+      // Restart SDK (simulate app restart)
+      Sdk.resetForTest();
+
+      // Now simulate offline (network fails)
+      when(() => mockHttp.send(any())).thenThrow(Exception('offline'));
+
+      Sdk.init(
+        SdkConfig(
+          baseUrl: 'https://api.example.com',
+          httpOverride: mockHttp,
+          tokenStoreOverride: FakeTokenStore(),
+          cacheStoreOverride: FileCacheStore(cacheFile),
+          queueStoreOverride: FileQueueStore(queueFile),
+          profile: const SdkProfile(
+            offlineEnabled: true,
+            queueWritesWhenOffline: true,
+            autoFlushQueue: false,
+            flushInterval: null,
+          ),
+          contract: SdkContract.auto(
+            data: 'result',
+            message: 'message',
+            successFlag: 'succeeded',
+            errorCode: 'errorCode',
+          ),
+          output: OutputOptions.jsonOnly(),
+        ),
+      );
+
+      // Should return cached even after restart
+      final r2 = await Sdk.instance.call.get('/me');
+      expect(r2.ok, isTrue);
+      expect(r2.source, ResponseSource.cache);
+      expect(r2.data['x'], 99);
+    });
+
+    test('7.2 Queue persists across restart then flush clears it', () async {
+      final mockHttp = MockHttpClient();
+
+      // Start offline: any request throws
+      when(() => mockHttp.send(any())).thenThrow(Exception('offline'));
+
+      Sdk.init(
+        SdkConfig(
+          baseUrl: 'https://api.example.com',
+          httpOverride: mockHttp,
+          tokenStoreOverride: FakeTokenStore(),
+          cacheStoreOverride: FileCacheStore(cacheFile),
+          queueStoreOverride: FileQueueStore(queueFile),
+          profile: const SdkProfile(
+            offlineEnabled: true,
+            queueWritesWhenOffline: true,
+            autoFlushQueue: false,
+            flushInterval: null,
+          ),
+          contract: SdkContract.auto(
+            data: 'result',
+            message: 'message',
+            successFlag: 'succeeded',
+            errorCode: 'errorCode',
+          ),
+          output: OutputOptions.jsonOnly(),
+        ),
+      );
+
+      // Queue 2 writes
+      final w1 = await Sdk.instance.call.post('/a', body: RequestBody.json({"x": 1}));
+      final w2 = await Sdk.instance.call.put('/b', body: RequestBody.json({"y": 2}));
+      expect(w1.ok, isTrue);
+      expect(w1.source, ResponseSource.queued);
+      expect((w1.data as Map)['queued'], true);
+
+      expect(w2.ok, isTrue);
+      expect(w2.source, ResponseSource.queued);
+      expect((w2.data as Map)['queued'], true);
+
+      // Restart SDK (queue must still exist on disk)
+      Sdk.resetForTest();
+
+      // Now go online: return OK
+      int networkCalls = 0;
+      when(() => mockHttp.send(any())).thenAnswer((_) async {
+        networkCalls++;
+        return const HttpResponse(
+          statusCode: 200,
+          headers: {},
+          data: {"succeeded": true, "errorCode": 0, "message": "OK", "result": true},
+        );
+      });
+
+      Sdk.init(
+        SdkConfig(
+          baseUrl: 'https://api.example.com',
+          httpOverride: mockHttp,
+          tokenStoreOverride: FakeTokenStore(),
+          cacheStoreOverride: FileCacheStore(cacheFile),
+          queueStoreOverride: FileQueueStore(queueFile),
+          profile: const SdkProfile(
+            offlineEnabled: true,
+            queueWritesWhenOffline: true,
+            autoFlushQueue: false,
+            flushInterval: null,
+          ),
+          contract: SdkContract.auto(
+            data: 'result',
+            message: 'message',
+            successFlag: 'succeeded',
+            errorCode: 'errorCode',
+          ),
+          output: OutputOptions.jsonOnly(),
+        ),
+      );
+
+      // Flush should send 2, then clear queue
+      final flushed = await Sdk.instance.queue.flush();
+      expect(flushed, 2);
+      expect(networkCalls, 2);
+
+      final flushedAgain = await Sdk.instance.queue.flush();
+      expect(flushedAgain, 0);
+    });
+
+    test('7.3 AutoFlush on init flushes persisted queue once (no timer)', () async {
+      final mockHttp = MockHttpClient();
+
+      // Phase 1: offline -> queue one write to disk
+      when(() => mockHttp.send(any())).thenThrow(Exception('offline'));
+
+      Sdk.init(
+        SdkConfig(
+          baseUrl: 'https://api.example.com',
+          httpOverride: mockHttp,
+          tokenStoreOverride: FakeTokenStore(),
+          cacheStoreOverride: FileCacheStore(cacheFile),
+          queueStoreOverride: FileQueueStore(queueFile),
+          profile: const SdkProfile(
+            offlineEnabled: true,
+            queueWritesWhenOffline: true,
+            autoFlushQueue: false, // no auto flush here
+            flushInterval: null,
+          ),
+          contract: SdkContract.auto(
+            data: 'result',
+            message: 'message',
+            successFlag: 'succeeded',
+            errorCode: 'errorCode',
+          ),
+          output: OutputOptions.jsonOnly(),
+        ),
+      );
+
+      final queued = await Sdk.instance.call.post('/auto', body: RequestBody.json({"k": "v"}));
+      expect(queued.ok, isTrue);
+      expect(queued.source, ResponseSource.queued);
+
+      // Restart SDK
+      Sdk.resetForTest();
+
+      // Phase 2: online + autoFlushQueue=true (no timer)
+      int calls = 0;
+      when(() => mockHttp.send(any())).thenAnswer((_) async {
+        calls++;
+        return const HttpResponse(
+          statusCode: 200,
+          headers: {},
+          data: {"succeeded": true, "errorCode": 0, "message": "OK", "result": true},
+        );
+      });
+
+      Sdk.init(
+        SdkConfig(
+          baseUrl: 'https://api.example.com',
+          httpOverride: mockHttp,
+          tokenStoreOverride: FakeTokenStore(),
+          cacheStoreOverride: FileCacheStore(cacheFile),
+          queueStoreOverride: FileQueueStore(queueFile),
+          profile: const SdkProfile(
+            offlineEnabled: true,
+            queueWritesWhenOffline: true,
+            autoFlushQueue: true, // ✅ flush once on init
+            flushInterval: null,  // ✅ no timer in tests
+          ),
+          contract: SdkContract.auto(
+            data: 'result',
+            message: 'message',
+            successFlag: 'succeeded',
+            errorCode: 'errorCode',
+          ),
+          output: OutputOptions.jsonOnly(),
+        ),
+      );
+
+      // Give microtask chance لأننا عملنا unawaited(queue.flush()) في _boot()
+      await Future<void>.delayed(Duration.zero);
+
+      expect(calls, 1);
+
+      // Queue should be empty now
+      final flushedAgain = await Sdk.instance.queue.flush();
+      expect(flushedAgain, 0);
+    });
+  });
+
+
 }

@@ -30,6 +30,7 @@ class SdkConfig {
   // ✅ Step 6: caching
   final CacheStore? cacheStoreOverride;
   final QueueStore? queueStoreOverride;
+  final bool offlineQueueEnabled;
 
   const SdkConfig({
     required this.baseUrl,
@@ -42,5 +43,6 @@ class SdkConfig {
     this.cacheStoreOverride,
     this.queueStoreOverride,
     List<SdkInterceptor>? interceptors,
+    this.offlineQueueEnabled = true,
   }) : interceptors = interceptors ?? const [];
 }

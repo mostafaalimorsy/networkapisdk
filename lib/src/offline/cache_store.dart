@@ -1,15 +1,28 @@
 abstract class CacheStore {
   Future<void> put(String key, Object? value);
   Future<Object?> get(String key);
+  Future<void> remove(String key);
   Future<void> clear();
 }
 
 class MemoryCacheStore implements CacheStore {
-  final _m = <String, Object?>{};
+  final Map<String, Object?> _mem = {};
+
   @override
-  Future<void> put(String key, Object? value) async => _m[key] = value;
+  Future<void> put(String key, Object? value) async {
+    _mem[key] = value;
+  }
+
   @override
-  Future<Object?> get(String key) async => _m[key];
+  Future<Object?> get(String key) async => _mem[key];
+
   @override
-  Future<void> clear() async => _m.clear();
+  Future<void> remove(String key) async {
+    _mem.remove(key);
+  }
+
+  @override
+  Future<void> clear() async {
+    _mem.clear();
+  }
 }

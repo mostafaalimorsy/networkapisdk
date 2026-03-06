@@ -6,12 +6,14 @@ import '../config/sdk_config.dart';
 import '../http/dio_http_client.dart';
 import '../http/http_client.dart';
 import '../interceptors/interceptor_runner.dart';
+import '../offline/cache_store.dart';
+import '../offline/queue_store.dart';
+import '../offline/sdk_queue.dart';
 import 'sdk_auth.dart';
 import 'sdk_call.dart';
 import 'sdk_events.dart';
-import '../offline/sdk_queue.dart';
-import '../offline/queue_store.dart';
-import '../offline/cache_store.dart';
+import 'dart:async';
+
 class Sdk {
   Sdk._(this.config);
 
@@ -63,18 +65,28 @@ class Sdk {
     // Core utilities first (used by call/auth)
     events = SdkEvents();
     interceptors = InterceptorRunner(config.interceptors);
+
     authManager = AuthManager(
       config.tokenStoreOverride ?? const SecureTokenStore(),
     );
+
+    // Offline stores
+    cache = config.cacheStoreOverride ?? MemoryCacheStore();
+    queueStore = config.queueStoreOverride ?? MemoryQueueStore();
 
     // HTTP + API surface
     http = config.httpOverride ?? DioHttpClient(baseUrl: config.baseUrl);
     call = SdkCall.internal(this);
     auth = SdkAuth.internal(this);
-    cache = config.cacheStoreOverride ?? MemoryCacheStore();
 
-    queueStore = config.queueStoreOverride ?? MemoryQueueStore();
-
+    // Queue last (depends on http/auth/events in practice)
     queue = SdkQueue.internal(this, queueStore);
+
+    // ✅ Step 7: Auto flush queue ON INIT (no timer needed for tests)
+    if (config.profile.shouldFlushOnceOnInit) {
+      // unawaited(queue.flush());
+      queue.flush();
+    }
+
   }
 }

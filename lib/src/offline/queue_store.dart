@@ -1,4 +1,5 @@
 import '../http/http_client.dart';
+import 'sync_queue_store.dart';
 
 class QueuedRequest {
   final HttpRequest request;
@@ -12,14 +13,30 @@ abstract class QueueStore {
   Future<void> clear();
 }
 
-class MemoryQueueStore implements QueueStore {
+class MemoryQueueStore implements QueueStore, SyncQueueStore {
   final _q = <QueuedRequest>[];
+
   @override
-  Future<void> enqueue(QueuedRequest r) async => _q.add(r);
+  Future<void> enqueue(QueuedRequest r) {
+    _q.add(r);
+    return Future.value();
+  }
+
   @override
-  Future<List<QueuedRequest>> peekAll() async => List.unmodifiable(_q);
+  Future<List<QueuedRequest>> peekAll() => Future.value(List.unmodifiable(_q));
+
   @override
-  Future<void> removeAt(int index) async => _q.removeAt(index);
+  List<QueuedRequest> peekAllSync() => List.unmodifiable(_q);
+
   @override
-  Future<void> clear() async => _q.clear();
+  Future<void> removeAt(int index) {
+    _q.removeAt(index);
+    return Future.value();
+  }
+
+  @override
+  Future<void> clear() {
+    _q.clear();
+    return Future.value();
+  }
 }
