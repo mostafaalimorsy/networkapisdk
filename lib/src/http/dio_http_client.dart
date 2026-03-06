@@ -26,22 +26,35 @@ class DioHttpClient implements HttpClient {
       method: request.method,
       headers: request.headers,
       responseType: _mapResponseType(request.responseType),
+      validateStatus: (_) => true,
     );
 
     final data = await _mapBody(request.body);
 
-    final res = await _dio.request(
-      request.endpoint,
-      queryParameters: request.query,
-      data: data,
-      options: options,
-    );
+    try {
+      final res = await _dio.request(
+        request.endpoint,
+        queryParameters: request.query,
+        data: data,
+        options: options,
+      );
 
-    return HttpResponse(
-      statusCode: res.statusCode,
-      headers: res.headers.map.map((k, v) => MapEntry(k, v.join(','))),
-      data: res.data,
-    );
+      return HttpResponse(
+        statusCode: res.statusCode,
+        headers: res.headers.map.map((k, v) => MapEntry(k, v.join(','))),
+        data: res.data,
+      );
+    } on DioException catch (e) {
+      final res = e.response;
+      if (res != null) {
+        return HttpResponse(
+          statusCode: res.statusCode,
+          headers: res.headers.map.map((k, v) => MapEntry(k, v.join(','))),
+          data: res.data,
+        );
+      }
+      rethrow;
+    }
   }
 
   ResponseType _mapResponseType(ResponseTypeHint hint) {
