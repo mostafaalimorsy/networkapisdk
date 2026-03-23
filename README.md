@@ -156,7 +156,7 @@ flutter pub get
 # 4. Importing SDK
 
 ```dart
-import 'package:network_api_sdk/network_api_sdk.dart';
+import 'package:network_api_sdk/network_api_sdk_test.dart';
 ```
 
 Always import from the package root.
