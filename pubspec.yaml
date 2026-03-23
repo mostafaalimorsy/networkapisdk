@@ -18,6 +18,8 @@ topics:
 
 Assistant: https://chatgpt.com/g/g-69aa3c19d9e081918dafe44ed385559c-network-api-sdk-guide
 
+license: MIT
+
 dependencies:
   dio: ^5.7.0
   connectivity_plus: ^6.1.0
