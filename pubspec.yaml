@@ -1,6 +1,6 @@
 name: network_api_sdk
 description: A production-ready Flutter networking SDK for standardized API communication, authentication (login + refresh), interceptors, offline caching, request queueing, persistence, and response normalization.
-version: 0.1.0
+version: 0.1.1
 homepage: https://github.com/mostafaalimorsy/networkapisdk
 repository: https://github.com/mostafaalimorsy/networkapisdk
 issue_tracker: https://github.com/mostafaalimorsy/networkapisdk/issues
