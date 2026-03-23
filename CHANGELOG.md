@@ -1,3 +1,17 @@
+## 0.1.2
+
+- Improved documentation and README clarity
+- Improved pub.dev score and package quality
+
+
+
+## 0.1.1
+
+- Improved documentation and README clarity
+- Added DartDoc comments for public APIs
+- Updated package metadata and license
+- Improved pub.dev score and package quality
+
 ## 0.1.0
 
 - Initial public release.
