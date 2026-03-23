@@ -1,13 +1,35 @@
 import '../auth/token_store.dart';
 import '../models/request_body.dart';
 import '../models/sdk_response.dart';
-import 'sdk.dart';
 import '../core/sdk_events.dart';
+import 'sdk.dart';
 
+/// Provides authentication helpers for the initialized [Sdk].
+///
+/// Access this API through [Sdk.instance.auth].
 class SdkAuth {
   final Sdk _sdk;
+
+  /// Internal constructor used by [Sdk].
   SdkAuth.internal(this._sdk);
 
+  /// Logs in with [body] and stores the returned tokens.
+  ///
+  /// This sends a `POST` request to the configured login endpoint with
+  /// [RequestBody.json] and `attachAuth: false`. On success, tokens are
+  /// extracted from the successful response data using
+  /// the configured token paths.
+  ///
+  /// Throws a [StateError] if authentication is not configured on the SDK.
+  ///
+  /// ```dart
+  /// final result = await Sdk.instance.auth.login(
+  ///   body: {
+  ///     'email': 'dev@example.com',
+  ///     'password': 'secret',
+  ///   },
+  /// );
+  /// ```
   Future<SdkResponse> login({
     required Map<String, dynamic> body,
     bool rememberMe = true,
@@ -46,7 +68,10 @@ class SdkAuth {
     final access = _readPath(data, opts.accessTokenPath)?.toString();
     final refresh = _readPath(data, opts.refreshTokenPath)?.toString();
 
-    if (access == null || access.isEmpty || refresh == null || refresh.isEmpty) {
+    if (access == null ||
+        access.isEmpty ||
+        refresh == null ||
+        refresh.isEmpty) {
       return SdkResponse(
         ok: false,
         statusCode: res.statusCode,
@@ -69,6 +94,12 @@ class SdkAuth {
     return res;
   }
 
+  /// Refreshes the current session using the stored refresh token.
+  ///
+  /// Returns the new [TokenPair] when refresh succeeds, or `null` when auth is
+  /// not configured, no refresh token exists, the refresh call fails, or token
+  /// extraction fails. Successful refreshes are persisted with
+  /// `rememberMe: true`.
   Future<TokenPair?> refresh() async {
     final opts = _sdk.config.auth;
     if (opts == null) return null;
@@ -91,7 +122,10 @@ class SdkAuth {
     final access = _readPath(data, opts.accessTokenPath)?.toString();
     final refresh = _readPath(data, opts.refreshTokenPath)?.toString();
 
-    if (access == null || access.isEmpty || refresh == null || refresh.isEmpty) {
+    if (access == null ||
+        access.isEmpty ||
+        refresh == null ||
+        refresh.isEmpty) {
       return null;
     }
 
@@ -100,6 +134,7 @@ class SdkAuth {
     return pair;
   }
 
+  /// Saves tokens directly to the configured [TokenStore].
   Future<void> saveTokens({
     required String accessToken,
     required String refreshToken,
@@ -111,7 +146,10 @@ class SdkAuth {
     );
   }
 
+  /// Restores any previously saved session.
   Future<TokenPair?> restoreSession() => _sdk.authManager.load();
+
+  /// Clears saved tokens without emitting an SDK event.
   Future<void> logout() => _sdk.authManager.clear();
 
   dynamic _readPath(Map<String, dynamic> json, String path) {
@@ -128,6 +166,7 @@ class SdkAuth {
     return cur;
   }
 
+  /// Clears the current session and optionally emits [SdkEvent.signedOut].
   Future<void> signOut({bool emitEvent = true}) async {
     await _sdk.authManager.clear();
     if (emitEvent) {
@@ -135,6 +174,7 @@ class SdkAuth {
     }
   }
 
-  // لو عايزها alias
-  Future<void> clearSession({bool emitEvent = true}) => signOut(emitEvent: emitEvent);
+  /// Alias for [signOut].
+  Future<void> clearSession({bool emitEvent = true}) =>
+      signOut(emitEvent: emitEvent);
 }

@@ -11,16 +11,25 @@ import 'sdk.dart';
 import 'sdk_events.dart';
 import '../offline/queue_store.dart';
 
+/// Sends normalized HTTP requests through the initialized [Sdk].
+///
+/// Access this API through [Sdk.instance.call].
+///
+/// When `attachAuth` is `true`, the SDK attaches the current bearer token,
+/// retries one time after a `401` by attempting a refresh, and emits
+/// [SdkEvent.sessionExpired] if recovery fails. Network failures may fall back
+/// to offline cache or request queueing depending on the active profile.
 class SdkCall {
   final Sdk _sdk;
   final JsonNormalizer _normalizer = const JsonNormalizer();
 
+  /// Internal constructor used by [Sdk].
   SdkCall.internal(this._sdk);
 
   Future<Map<String, String>> _buildHeaders(
-      Map<String, String> baseHeaders, {
-        required bool attachAuth,
-      }) async {
+    Map<String, String> baseHeaders, {
+    required bool attachAuth,
+  }) async {
     final h = <String, String>{}..addAll(baseHeaders);
 
     if (attachAuth) {
@@ -40,13 +49,23 @@ class SdkCall {
     return '${req.method}:${req.endpoint}?$queryStr';
   }
 
+  /// Sends a `GET` request.
+  ///
+  /// Successful responses are normalized, evaluated with the configured
+  /// contract, and may be cached when offline support is enabled. If a network
+  /// failure occurs and a cached value exists, the returned [SdkResponse] uses
+  /// [ResponseSource.cache].
+  ///
+  /// ```dart
+  /// final response = await Sdk.instance.call.get('/profile');
+  /// ```
   Future<SdkResponse> get(
-      String endpoint, {
-        Map<String, dynamic>? query,
-        Map<String, String>? headers,
-        ResponseTypeHint responseType = ResponseTypeHint.json,
-        bool attachAuth = true,
-      }) =>
+    String endpoint, {
+    Map<String, dynamic>? query,
+    Map<String, String>? headers,
+    ResponseTypeHint responseType = ResponseTypeHint.json,
+    bool attachAuth = true,
+  }) =>
       _send(
         endpoint: endpoint,
         method: 'GET',
@@ -57,14 +76,18 @@ class SdkCall {
         attachAuth: attachAuth,
       );
 
+  /// Sends a `POST` request.
+  ///
+  /// On network failure, non-`GET` requests can be returned as queued when
+  /// offline queueing is enabled in the active profile.
   Future<SdkResponse> post(
-      String endpoint, {
-        Map<String, dynamic>? query,
-        Map<String, String>? headers,
-        RequestBody body = const RequestBody.none(),
-        ResponseTypeHint responseType = ResponseTypeHint.json,
-        bool attachAuth = true,
-      }) =>
+    String endpoint, {
+    Map<String, dynamic>? query,
+    Map<String, String>? headers,
+    RequestBody body = const RequestBody.none(),
+    ResponseTypeHint responseType = ResponseTypeHint.json,
+    bool attachAuth = true,
+  }) =>
       _send(
         endpoint: endpoint,
         method: 'POST',
@@ -75,14 +98,15 @@ class SdkCall {
         attachAuth: attachAuth,
       );
 
+  /// Sends a `PUT` request.
   Future<SdkResponse> put(
-      String endpoint, {
-        Map<String, dynamic>? query,
-        Map<String, String>? headers,
-        RequestBody body = const RequestBody.none(),
-        ResponseTypeHint responseType = ResponseTypeHint.json,
-        bool attachAuth = true,
-      }) =>
+    String endpoint, {
+    Map<String, dynamic>? query,
+    Map<String, String>? headers,
+    RequestBody body = const RequestBody.none(),
+    ResponseTypeHint responseType = ResponseTypeHint.json,
+    bool attachAuth = true,
+  }) =>
       _send(
         endpoint: endpoint,
         method: 'PUT',
@@ -93,14 +117,15 @@ class SdkCall {
         attachAuth: attachAuth,
       );
 
+  /// Sends a `DELETE` request.
   Future<SdkResponse> delete(
-      String endpoint, {
-        Map<String, dynamic>? query,
-        Map<String, String>? headers,
-        RequestBody body = const RequestBody.none(),
-        ResponseTypeHint responseType = ResponseTypeHint.json,
-        bool attachAuth = true,
-      }) =>
+    String endpoint, {
+    Map<String, dynamic>? query,
+    Map<String, String>? headers,
+    RequestBody body = const RequestBody.none(),
+    ResponseTypeHint responseType = ResponseTypeHint.json,
+    bool attachAuth = true,
+  }) =>
       _send(
         endpoint: endpoint,
         method: 'DELETE',
@@ -111,15 +136,18 @@ class SdkCall {
         attachAuth: attachAuth,
       );
 
+  /// Sends a request with an arbitrary HTTP [method].
+  ///
+  /// [method] is converted to upper case before the request is sent.
   Future<SdkResponse> any(
-      String endpoint, {
-        required String method,
-        Map<String, dynamic>? query,
-        Map<String, String>? headers,
-        RequestBody body = const RequestBody.none(),
-        ResponseTypeHint responseType = ResponseTypeHint.json,
-        bool attachAuth = true,
-      }) =>
+    String endpoint, {
+    required String method,
+    Map<String, dynamic>? query,
+    Map<String, String>? headers,
+    RequestBody body = const RequestBody.none(),
+    ResponseTypeHint responseType = ResponseTypeHint.json,
+    bool attachAuth = true,
+  }) =>
       _send(
         endpoint: endpoint,
         method: method.toUpperCase(),
@@ -191,7 +219,7 @@ class SdkCall {
       if (attachAuth && httpRes.statusCode == 401) {
         if (!isRetry) {
           final refreshed = await _sdk.authManager.refreshSingleFlight(
-                (current) async => _sdk.auth.refresh(),
+            (current) async => _sdk.auth.refresh(),
           );
 
           if (refreshed != null) {
@@ -233,7 +261,9 @@ class SdkCall {
       );
 
       // Offline cache write for successful GET
-      if (_sdk.config.profile.offlineEnabled && req.method == 'GET' && sdkRes.ok) {
+      if (_sdk.config.profile.offlineEnabled &&
+          req.method == 'GET' &&
+          sdkRes.ok) {
         await _sdk.cache.put(_cacheKey(req), sdkRes.data);
       }
 

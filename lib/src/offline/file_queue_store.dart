@@ -7,10 +7,18 @@ import '../models/request_body.dart';
 import 'queue_store.dart';
 import 'sync_queue_store.dart';
 
+/// File-backed [QueueStore] that persists queued requests as JSON.
+///
+/// The queue is loaded synchronously during construction so startup code can
+/// inspect or flush it immediately. Persistence failures are swallowed and do
+/// not throw.
 class FileQueueStore implements QueueStore, SyncQueueStore {
+  /// The JSON file used to persist the queue.
   final File file;
+
   final List<QueuedRequest> _q = [];
 
+  /// Creates a queue store backed by [file].
   FileQueueStore(this.file) {
     _loadSync();
   }
@@ -49,18 +57,26 @@ class FileQueueStore implements QueueStore, SyncQueueStore {
   }
 
   @override
+
+  /// Returns an immutable snapshot of the queue synchronously.
   List<QueuedRequest> peekAllSync() => List.unmodifiable(_q);
 
   @override
+
+  /// Appends [r] to the queue and persists the whole file.
   Future<void> enqueue(QueuedRequest r) async {
     _q.add(r);
     await _persist();
   }
 
   @override
+
+  /// Returns an immutable snapshot of the queue.
   Future<List<QueuedRequest>> peekAll() async => List.unmodifiable(_q);
 
   @override
+
+  /// Removes the queued item at [index] and persists the change.
   Future<void> removeAt(int index) async {
     if (index < 0 || index >= _q.length) return;
     _q.removeAt(index);
@@ -68,6 +84,8 @@ class FileQueueStore implements QueueStore, SyncQueueStore {
   }
 
   @override
+
+  /// Clears the queue and persists the empty state.
   Future<void> clear() async {
     _q.clear();
     await _persist();
@@ -89,22 +107,20 @@ class FileQueueStore implements QueueStore, SyncQueueStore {
     final method = (j['method'] ?? 'GET').toString();
 
     final queryRaw = j['query'];
-    final query =
-    queryRaw is Map ? Map<String, dynamic>.from(queryRaw) : null;
+    final query = queryRaw is Map ? Map<String, dynamic>.from(queryRaw) : null;
 
     final headersRaw = j['headers'];
     final headers = headersRaw is Map
         ? Map<String, String>.from(
-      headersRaw.map(
-            (k, v) => MapEntry(k.toString(), v.toString()),
-      ),
-    )
+            headersRaw.map(
+              (k, v) => MapEntry(k.toString(), v.toString()),
+            ),
+          )
         : null;
 
-    final rtName =
-    (j['responseType'] ?? ResponseTypeHint.json.name).toString();
+    final rtName = (j['responseType'] ?? ResponseTypeHint.json.name).toString();
     final responseType = ResponseTypeHint.values.firstWhere(
-          (e) => e.name == rtName,
+      (e) => e.name == rtName,
       orElse: () => ResponseTypeHint.json,
     );
 
@@ -126,9 +142,7 @@ class FileQueueStore implements QueueStore, SyncQueueStore {
   Map<String, dynamic> _bodyToJson(RequestBody b) {
     switch (b.type) {
       case BodyType.none:
-        return <String, dynamic>{
-          'type': BodyType.none.name,
-        };
+        return <String, dynamic>{'type': BodyType.none.name};
 
       case BodyType.json:
         return <String, dynamic>{
@@ -168,7 +182,7 @@ class FileQueueStore implements QueueStore, SyncQueueStore {
           'type': BodyType.multipart.name,
           'fields': b.fields,
           'files': b.files?.map(
-                (key, file) => MapEntry(
+            (key, file) => MapEntry(
               key,
               <String, dynamic>{
                 'filename': file.filename,
@@ -184,7 +198,7 @@ class FileQueueStore implements QueueStore, SyncQueueStore {
   RequestBody _bodyFromJson(Map<String, dynamic> j) {
     final typeName = (j['type'] ?? BodyType.none.name).toString();
     final type = BodyType.values.firstWhere(
-          (e) => e.name == typeName,
+      (e) => e.name == typeName,
       orElse: () => BodyType.none,
     );
 
@@ -210,7 +224,7 @@ class FileQueueStore implements QueueStore, SyncQueueStore {
         return RequestBody.bytes(
           bytes,
           contentType:
-          j['contentType']?.toString() ?? 'application/octet-stream',
+              j['contentType']?.toString() ?? 'application/octet-stream',
         );
 
       case BodyType.formUrlEncoded:

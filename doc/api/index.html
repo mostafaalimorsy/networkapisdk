@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="network_api_sdk API docs, for the Dart programming language.">
+  <title>network_api_sdk - Dart API docs</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="static-assets/github.css?v1">
+  <link rel="stylesheet" href="static-assets/styles.css?v1">
+  <link rel="icon" href="static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="https://github.com/mostafaalimorsy/networkapisdk">network_api_sdk package</a></li>
+  </ol>
+  <div class="self-name">network_api_sdk</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+  <div id="dartdoc-main-content" class="main-content">
+      
+<section class="desc markdown">
+  <p><a href=""><img src="https://img.shields.io/pub/v/network_api_sdk.svg" alt="pub version"></a>
+<a href=""><img src="https://img.shields.io/pub/likes/network_api_sdk" alt="likes"></a>
+<a href=""><img src="https://img.shields.io/pub/popularity/network_api_sdk" alt="popularity"></a>
+<a href=""><img src="https://img.shields.io/pub/points/network_api_sdk" alt="pub points"></a></p>
+<h1 id="network-api-sdk">Network API SDK</h1>
+<p>A production-ready Flutter networking SDK with built-in authentication, interceptors, offline caching, and request queueing — designed for scalable and enterprise-grade applications.</p>
+<hr>
+<h2 id="-sdk-ai-assistant">🤖 SDK AI Assistant</h2>
+<p>Get instant help integrating the SDK using the official AI assistant.</p>
+<p>It can:</p>
+<ul>
+<li>Generate ready-to-use integration code</li>
+<li>Explain authentication flows</li>
+<li>Debug API issues</li>
+<li>Guide offline and queue behavior</li>
+</ul>
+<p>Assistant:</p>
+<p><a href="https://chatgpt.com/g/g-69aa3c19d9e081918dafe44ed385559c-network-api-sdk-guide">https://chatgpt.com/g/g-69aa3c19d9e081918dafe44ed385559c-network-api-sdk-guide</a></p>
+<hr>
+<h1 id="table-of-contents">Table of Contents</h1>
+<ol>
+<li><a href="#1-overview">Overview</a></li>
+<li><a href="#2-public-api-surface">Public API Surface</a></li>
+<li><a href="#3-installation">Installation</a></li>
+<li><a href="#4-importing-sdk">Importing SDK</a></li>
+<li><a href="#5-architecture">Architecture</a></li>
+<li><a href="#6-quick-start">Quick Start</a></li>
+<li><a href="#7-sdk-initialization">SDK Initialization</a></li>
+<li><a href="#8-sdkconfig-reference">SdkConfig Reference</a></li>
+<li><a href="#9-sdkprofile-reference">SdkProfile Reference</a></li>
+<li><a href="#10-sdkcontract-reference">SdkContract Reference</a></li>
+<li><a href="#11-outputoptions-reference">OutputOptions Reference</a></li>
+<li><a href="#12-authoptions-reference">AuthOptions Reference</a></li>
+<li><a href="#13-http-calls">HTTP Calls</a></li>
+<li><a href="#14-requestbody-types">RequestBody Types</a></li>
+<li><a href="#15-authentication">Authentication</a></li>
+<li><a href="#16-interceptors">Interceptors</a></li>
+<li><a href="#17-response-model">Response Model</a></li>
+<li><a href="#18-error-model">Error Model</a></li>
+<li><a href="#19-events">Events</a></li>
+<li><a href="#20-offline-support">Offline Support</a></li>
+<li><a href="#21-persistence-stores">Persistence Stores</a></li>
+<li><a href="#22-http-extension-points">HTTP Extension Points</a></li>
+<li><a href="#23-example-project">Example Project</a></li>
+<li><a href="#24-advanced-initialization">Advanced Initialization</a></li>
+<li><a href="#25-flow-diagrams">Flow Diagrams</a></li>
+<li><a href="#26-troubleshooting">Troubleshooting</a></li>
+<li><a href="#27-project-status">Project Status</a></li>
+</ol>
+<hr>
+<h1 id="1-overview">1. Overview</h1>
+<p>Network API SDK is a standardized networking layer for Flutter applications.</p>
+<p>It centralizes:</p>
+<ul>
+<li>request construction</li>
+<li>response normalization</li>
+<li>contract-based success/error evaluation</li>
+<li>authentication lifecycle</li>
+<li>interceptor execution</li>
+<li>offline caching</li>
+<li>offline request queue</li>
+<li>persistent request queue</li>
+<li>queue flushing</li>
+</ul>
+<p>The goal is to make API integration consistent across applications.</p>
+<h2 id="-why-network-api-sdk">❓ Why Network API SDK?</h2>
+<ul>
+<li>Eliminates repetitive API boilerplate</li>
+<li>Standardizes authentication and error handling</li>
+<li>Provides built-in offline support and persistence</li>
+<li>Ensures consistent API contracts across applications</li>
+<li>Designed for enterprise-scale Flutter projects</li>
+</ul>
+<hr>
+<h1 id="2-public-api-surface">2. Public API Surface</h1>
+<h2 id="core">Core</h2>
+<ul>
+<li><code>Sdk</code></li>
+<li><code>SdkEvents</code></li>
+<li><code>SdkEvent</code></li>
+</ul>
+<h2 id="configuration">Configuration</h2>
+<ul>
+<li><code>SdkConfig</code></li>
+<li><code>SdkProfile</code></li>
+<li><code>SdkContract</code></li>
+<li><code>OutputOptions</code></li>
+<li><code>AuthOptions</code></li>
+</ul>
+<h2 id="models">Models</h2>
+<ul>
+<li><code>RequestBody</code></li>
+<li><code>BodyFile</code></li>
+<li><code>BodyType</code></li>
+<li><code>ResponseTypeHint</code></li>
+<li><code>SdkResponse</code></li>
+<li><code>SdkError</code></li>
+<li><code>ResponseSource</code></li>
+<li><code>ErrorType</code></li>
+</ul>
+<h2 id="authentication">Authentication</h2>
+<ul>
+<li><code>AuthManager</code></li>
+<li><code>TokenStore</code></li>
+<li><code>SecureTokenStore</code></li>
+</ul>
+<h2 id="interceptors">Interceptors</h2>
+<ul>
+<li><code>SdkInterceptor</code></li>
+</ul>
+<h2 id="http-layer">HTTP Layer</h2>
+<ul>
+<li><code>HttpClient</code></li>
+<li><code>HttpRequest</code></li>
+<li><code>HttpResponse</code></li>
+<li><code>DioHttpClient</code></li>
+</ul>
+<h2 id="offline-layer">Offline Layer</h2>
+<ul>
+<li><code>CacheStore</code></li>
+<li><code>FileCacheStore</code></li>
+<li><code>QueueStore</code></li>
+<li><code>FileQueueStore</code></li>
+</ul>
+<hr>
+<h1 id="3-installation">3. Installation</h1>
+<h3 id="local-dependency">Local dependency</h3>
+<pre class="language-yaml"><code class="language-yaml">dependencies:
+  network_api_sdk:
+    path: ../network_api_sdk
+</code></pre>
+<h3 id="published-dependency">Published dependency</h3>
+<pre class="language-yaml"><code class="language-yaml">dependencies:
+  network_api_sdk: ^0.1.0
+</code></pre>
+<p>Run:</p>
+<pre class="language-bash"><code class="language-bash">flutter pub get
+</code></pre>
+<hr>
+<h1 id="4-importing-sdk">4. Importing SDK</h1>
+<pre class="language-dart"><code class="language-dart">import 'package:network_api_sdk/network_api_sdk.dart';
+</code></pre>
+<p>Always import from the package root.</p>
+<p>Avoid importing from <code>src</code>.</p>
+<hr>
+<h1 id="5-architecture">5. Architecture</h1>
+<p>SDK architecture layers:</p>
+<pre class="language-text"><code class="language-text">Application Layer
+        ↓
+     SDK Core
+        ↓
+     HTTP Layer
+        ↓
+    Storage Layer
+</code></pre>
+<h3 id="sdk-core-responsibilities">SDK Core Responsibilities</h3>
+<ul>
+<li>Request building</li>
+<li>Response normalization</li>
+<li>Authentication lifecycle</li>
+<li>Contract evaluation</li>
+<li>Interceptors</li>
+<li>Offline orchestration</li>
+</ul>
+<hr>
+<h1 id="6-quick-start">6. Quick Start</h1>
+<h2 id="-30-second-setup">⚡ 30-Second Setup</h2>
+<pre class="language-dart"><code class="language-dart">Sdk.init(
+  SdkConfig(
+    baseUrl: 'https://api.example.com',
+    profile: SdkProfile.defaultSecure(),
+    contract: SdkContract.auto(
+      data: 'data',
+      message: 'message',
+      successFlag: 'isSuccess',
+      errorCode: 'code',
+    ),
+    output: OutputOptions.jsonOnly(),
+  ),
+);
+
+final res = await Sdk.instance.call.get('/users');
+</code></pre>
+<p>Initialize the SDK:</p>
+<pre class="language-dart"><code class="language-dart">Sdk.init(
+  SdkConfig(
+    baseUrl: 'https://api.example.com',
+    profile: SdkProfile.defaultSecure(),
+    contract: SdkContract.auto(
+      data: 'data',
+      message: 'message',
+      successFlag: 'isSuccess',
+      errorCode: 'code',
+    ),
+    output: OutputOptions.jsonOnly(),
+  ),
+);
+</code></pre>
+<p>Example usage:</p>
+<pre class="language-dart"><code class="language-dart">final response = await Sdk.instance.call.get('/profile');
+</code></pre>
+<hr>
+<h1 id="7-sdk-initialization">7. SDK Initialization</h1>
+<p>Initialize once:</p>
+<pre class="language-dart"><code class="language-dart">Sdk.init(SdkConfig(...));
+</code></pre>
+<p>Access instance:</p>
+<pre class="language-dart"><code class="language-dart">Sdk.instance
+</code></pre>
+<p>Available modules:</p>
+<ul>
+<li><code>Sdk.instance.call</code></li>
+<li><code>Sdk.instance.auth</code></li>
+<li><code>Sdk.instance.events</code></li>
+<li><code>Sdk.instance.http</code></li>
+<li><code>Sdk.instance.cache</code></li>
+<li><code>Sdk.instance.queue</code></li>
+<li><code>Sdk.instance.config</code></li>
+</ul>
+<hr>
+<h1 id="8-sdkconfig-reference">8. SdkConfig Reference</h1>
+<p>Primary SDK configuration.</p>
+<p>Example:</p>
+<pre class="language-dart"><code class="language-dart">SdkConfig(
+  baseUrl: 'https://api.example.com',
+  profile: SdkProfile.defaultSecure(),
+  contract: SdkContract.auto(
+    data: 'data',
+    message: 'message',
+  ),
+  output: OutputOptions.jsonOnly(),
+)
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>baseUrl</code></td>
+<td><code>String</code></td>
+<td>Yes</td>
+<td>API base URL</td>
+</tr>
+<tr>
+<td><code>httpOverride</code></td>
+<td><code>HttpClient?</code></td>
+<td>No</td>
+<td>Custom HTTP client</td>
+</tr>
+<tr>
+<td><code>auth</code></td>
+<td><code>AuthOptions?</code></td>
+<td>No</td>
+<td>Authentication configuration</td>
+</tr>
+<tr>
+<td><code>tokenStoreOverride</code></td>
+<td><code>TokenStore?</code></td>
+<td>No</td>
+<td>Custom token storage</td>
+</tr>
+<tr>
+<td><code>cacheStoreOverride</code></td>
+<td><code>CacheStore?</code></td>
+<td>No</td>
+<td>Custom cache store</td>
+</tr>
+<tr>
+<td><code>queueStoreOverride</code></td>
+<td><code>QueueStore?</code></td>
+<td>No</td>
+<td>Custom queue store</td>
+</tr>
+<tr>
+<td><code>profile</code></td>
+<td><code>SdkProfile</code></td>
+<td>Yes</td>
+<td>Offline configuration</td>
+</tr>
+<tr>
+<td><code>contract</code></td>
+<td><code>SdkContract</code></td>
+<td>Yes</td>
+<td>API contract</td>
+</tr>
+<tr>
+<td><code>output</code></td>
+<td><code>OutputOptions</code></td>
+<td>Yes</td>
+<td>Response normalization</td>
+</tr>
+<tr>
+<td><code>interceptors</code></td>
+<td><code>List&lt;SdkInterceptor&gt;?</code></td>
+<td>No</td>
+<td>SDK interceptors</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h1 id="9-sdkprofile-reference">9. SdkProfile Reference</h1>
+<p>Controls offline behavior.</p>
+<pre class="language-dart"><code class="language-dart">const SdkProfile(
+  offlineEnabled: true,
+  queueWritesWhenOffline: true,
+  autoFlushQueue: true,
+  flushInterval: null,
+)
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>offlineEnabled</code></td>
+<td><code>bool</code></td>
+<td>Enable offline features</td>
+</tr>
+<tr>
+<td><code>queueWritesWhenOffline</code></td>
+<td><code>bool</code></td>
+<td>Queue writes when offline</td>
+</tr>
+<tr>
+<td><code>autoFlushQueue</code></td>
+<td><code>bool</code></td>
+<td>Flush the queue once on init when <code>flushInterval</code> is <code>null</code></td>
+</tr>
+<tr>
+<td><code>flushInterval</code></td>
+<td><code>Duration?</code></td>
+<td>Reserved for future scheduled flushing; not used by the built-in flow yet</td>
+</tr>
+</tbody>
+</table>
+<p>Factories:</p>
+<pre class="language-dart"><code class="language-dart">SdkProfile.defaultSecure();
+SdkProfile.offlineFirstSecure();
+</code></pre>
+<hr>
+<h1 id="10-sdkcontract-reference">10. SdkContract Reference</h1>
+<p>Defines backend response structure.</p>
+<pre class="language-dart"><code class="language-dart">SdkContract.auto(
+  data: 'data',
+  message: 'message',
+  successFlag: 'isSuccess',
+  errorCode: 'code',
+)
+</code></pre>
+<p>Fallback error path:</p>
+<pre class="language-text"><code class="language-text">errors[0].message
+</code></pre>
+<hr>
+<h1 id="11-outputoptions-reference">11. OutputOptions Reference</h1>
+<p>Controls SDK output format.</p>
+<pre class="language-dart"><code class="language-dart">OutputOptions.jsonOnly();
+</code></pre>
+<p>Advanced:</p>
+<pre class="language-dart"><code class="language-dart">OutputOptions.jsonOnly(
+  tryParseJsonText: true,
+  bytesMode: BytesJsonMode.base64,
+);
+</code></pre>
+<hr>
+<h1 id="12-authoptions-reference">12. AuthOptions Reference</h1>
+<pre class="language-dart"><code class="language-dart">AuthOptions(
+  loginEndpoint: '/auth/login',
+  refreshEndpoint: '/auth/refresh',
+  accessTokenPath: 'accessToken',
+  refreshTokenPath: 'refreshToken',
+);
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>loginEndpoint</code></td>
+<td><code>String</code></td>
+<td>Login API</td>
+</tr>
+<tr>
+<td><code>refreshEndpoint</code></td>
+<td><code>String</code></td>
+<td>Refresh API</td>
+</tr>
+<tr>
+<td><code>accessTokenPath</code></td>
+<td><code>String</code></td>
+<td>Access token path</td>
+</tr>
+<tr>
+<td><code>refreshTokenPath</code></td>
+<td><code>String</code></td>
+<td>Refresh token path</td>
+</tr>
+<tr>
+<td><code>refreshRequestKey</code></td>
+<td><code>String</code></td>
+<td>Refresh body key, defaults to <code>refreshToken</code></td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h1 id="13-http-calls">13. HTTP Calls</h1>
+<p>Main entry:</p>
+<pre class="language-dart"><code class="language-dart">Sdk.instance.call
+</code></pre>
+<p>Methods:</p>
+<ul>
+<li><code>get</code></li>
+<li><code>post</code></li>
+<li><code>put</code></li>
+<li><code>delete</code></li>
+<li><code>any</code></li>
+</ul>
+<p>Example:</p>
+<pre class="language-dart"><code class="language-dart">final res = await Sdk.instance.call.get('/users');
+</code></pre>
+<h3 id="http-call-parameters">HTTP Call Parameters</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>endpoint</code></td>
+<td><code>String</code></td>
+<td>Yes</td>
+<td>API endpoint path</td>
+</tr>
+<tr>
+<td><code>query</code></td>
+<td><code>Map&lt;String, dynamic&gt;?</code></td>
+<td>No</td>
+<td>Query parameters</td>
+</tr>
+<tr>
+<td><code>headers</code></td>
+<td><code>Map&lt;String, String&gt;?</code></td>
+<td>No</td>
+<td>Request headers</td>
+</tr>
+<tr>
+<td><code>body</code></td>
+<td><code>RequestBody?</code></td>
+<td>No</td>
+<td>Request payload</td>
+</tr>
+<tr>
+<td><code>responseType</code></td>
+<td><code>ResponseTypeHint?</code></td>
+<td>No</td>
+<td>Expected response type</td>
+</tr>
+<tr>
+<td><code>attachAuth</code></td>
+<td><code>bool</code></td>
+<td>No</td>
+<td>Whether to attach bearer token</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h1 id="14-requestbody-types">14. RequestBody Types</h1>
+<p>Constructors:</p>
+<pre class="language-dart"><code class="language-dart">RequestBody.none()
+RequestBody.json()
+RequestBody.text()
+RequestBody.bytes()
+RequestBody.formUrlEncoded()
+RequestBody.multipart()
+</code></pre>
+<p>Example:</p>
+<pre class="language-dart"><code class="language-dart">RequestBody.json({
+  'email': 'a@b.com',
+});
+</code></pre>
+<h3 id="bodyfile">BodyFile</h3>
+<p>Used in multipart uploads.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>filename</code></td>
+<td><code>String</code></td>
+<td>File name</td>
+</tr>
+<tr>
+<td><code>bytes</code></td>
+<td><code>Uint8List</code></td>
+<td>File data</td>
+</tr>
+<tr>
+<td><code>contentType</code></td>
+<td><code>String?</code></td>
+<td>MIME type</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h1 id="15-authentication">15. Authentication</h1>
+<p>Login example:</p>
+<pre class="language-dart"><code class="language-dart">await Sdk.instance.auth.login(
+  body: {
+    'username': 'user',
+    'password': 'password',
+  },
+  rememberMe: true,
+);
+</code></pre>
+<h3 id="login-parameters">Login parameters</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>body</code></td>
+<td><code>Map</code></td>
+<td>Login payload</td>
+</tr>
+<tr>
+<td><code>headers</code></td>
+<td><code>Map?</code></td>
+<td>Extra headers</td>
+</tr>
+<tr>
+<td><code>rememberMe</code></td>
+<td><code>bool</code></td>
+<td>Persist tokens</td>
+</tr>
+</tbody>
+</table>
+<h3 id="sign-out">Sign Out</h3>
+<pre class="language-dart"><code class="language-dart">await Sdk.instance.auth.signOut();
+</code></pre>
+<hr>
+<h1 id="16-interceptors">16. Interceptors</h1>
+<p>Example:</p>
+<pre class="language-dart"><code class="language-dart">class MyInterceptor implements SdkInterceptor {
+  @override
+  Future&lt;HttpRequest?&gt; onRequest(HttpRequest req) async =&gt; req;
+
+  @override
+  Future&lt;HttpResponse?&gt; onResponse(HttpRequest req, HttpResponse res) async =&gt; res;
+
+  @override
+  Future&lt;SdkError?&gt; onError(HttpRequest req, SdkError error) async =&gt; error;
+}
+</code></pre>
+<p>Register:</p>
+<pre class="language-dart"><code class="language-dart">interceptors: [
+  MyInterceptor(),
+]
+</code></pre>
+<hr>
+<h1 id="17-response-model">17. Response Model</h1>
+<p>SDK responses return <code>SdkResponse</code>.</p>
+<p>Example:</p>
+<pre class="language-dart"><code class="language-dart">if (res.ok) {
+  print(res.data);
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ok</code></td>
+<td><code>bool</code></td>
+</tr>
+<tr>
+<td><code>data</code></td>
+<td><code>dynamic</code></td>
+</tr>
+<tr>
+<td><code>error</code></td>
+<td><code>SdkError?</code></td>
+</tr>
+<tr>
+<td><code>statusCode</code></td>
+<td><code>int</code></td>
+</tr>
+<tr>
+<td><code>message</code></td>
+<td><code>String?</code></td>
+</tr>
+<tr>
+<td><code>source</code></td>
+<td><code>ResponseSource</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="responsesource">ResponseSource</h3>
+<ul>
+<li><code>network</code></li>
+<li><code>cache</code></li>
+<li><code>queued</code></li>
+</ul>
+<hr>
+<h1 id="18-error-model">18. Error Model</h1>
+<p>SDK errors return <code>SdkError</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>type</code></td>
+<td><code>ErrorType</code></td>
+</tr>
+<tr>
+<td><code>message</code></td>
+<td><code>String</code></td>
+</tr>
+<tr>
+<td><code>statusCode</code></td>
+<td><code>int?</code></td>
+</tr>
+<tr>
+<td><code>raw</code></td>
+<td><code>dynamic</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="errortype">ErrorType</h3>
+<ul>
+<li><code>offline</code></li>
+<li><code>timeout</code></li>
+<li><code>unauthorized</code></li>
+<li><code>forbidden</code></li>
+<li><code>badRequest</code></li>
+<li><code>server</code></li>
+<li><code>contract</code></li>
+<li><code>parse</code></li>
+<li><code>unknown</code></li>
+</ul>
+<hr>
+<h1 id="19-events">19. Events</h1>
+<p>Listen:</p>
+<pre class="language-dart"><code class="language-dart">Sdk.instance.events.stream.listen((event) {
+  // handle event
+});
+</code></pre>
+<p>Events:</p>
+<ul>
+<li><code>sessionExpired</code></li>
+<li><code>signedOut</code></li>
+</ul>
+<hr>
+<h1 id="20-offline-support">20. Offline Support</h1>
+<p>When enabled:</p>
+<ul>
+<li>GET → cache fallback</li>
+<li>WRITE → queued request</li>
+</ul>
+<p>Manual queue flush:</p>
+<pre class="language-dart"><code class="language-dart">await Sdk.instance.queue.flush();
+</code></pre>
+<hr>
+<h1 id="21-persistence-stores">21. Persistence Stores</h1>
+<p>Tokens</p>
+<ul>
+<li><code>TokenStore</code></li>
+<li><code>SecureTokenStore</code></li>
+</ul>
+<p>Cache</p>
+<ul>
+<li><code>CacheStore</code></li>
+<li><code>FileCacheStore</code></li>
+</ul>
+<p>Queue</p>
+<ul>
+<li><code>QueueStore</code></li>
+<li><code>FileQueueStore</code></li>
+</ul>
+<hr>
+<h1 id="22-http-extension-points">22. HTTP Extension Points</h1>
+<p>Default client:</p>
+<pre class="language-dart"><code class="language-dart">DioHttpClient
+</code></pre>
+<p>Constructor:</p>
+<pre class="language-dart"><code class="language-dart">DioHttpClient(
+  baseUrl: 'https://api.example.com',
+  connectTimeout: Duration(seconds: 20),
+  receiveTimeout: Duration(seconds: 30),
+);
+</code></pre>
+<hr>
+<h1 id="23-example-project">23. Example Project</h1>
+<p>Located in:</p>
+<pre class="language-text"><code class="language-text">/example
+</code></pre>
+<p>Run:</p>
+<pre class="language-bash"><code class="language-bash">cd example
+flutter pub get
+flutter run
+</code></pre>
+<hr>
+<h1 id="24-advanced-initialization">24. Advanced Initialization</h1>
+<p>Offline-first configuration:</p>
+<pre class="language-dart"><code class="language-dart">Sdk.init(
+  SdkConfig(
+    baseUrl: 'https://api.example.com',
+    profile: SdkProfile.offlineFirstSecure(),
+    contract: SdkContract.auto(
+      data: 'data',
+      message: 'message',
+    ),
+    output: OutputOptions.jsonOnly(),
+  ),
+);
+</code></pre>
+<hr>
+<h1 id="25-flow-diagrams">25. Flow Diagrams</h1>
+<p>Authentication flow:</p>
+<pre class="language-text"><code class="language-text">Login
+ ↓
+Save Tokens
+ ↓
+Attach Bearer
+ ↓
+401
+ ↓
+Refresh
+ ↓
+Retry Request
+</code></pre>
+<p>Offline queue flow:</p>
+<pre class="language-text"><code class="language-text">Write Request
+ ↓
+No Internet
+ ↓
+Queue
+ ↓
+Persist
+ ↓
+Flush Later
+</code></pre>
+<hr>
+<h1 id="26-troubleshooting">26. Troubleshooting</h1>
+<p>SDK not initialized:</p>
+<pre class="language-dart"><code class="language-dart">Sdk.init(
+  SdkConfig(
+    baseUrl: 'https://api.example.com',
+    profile: SdkProfile.defaultSecure(),
+    contract: SdkContract.auto(
+      data: 'data',
+      message: 'message',
+    ),
+    output: OutputOptions.jsonOnly(),
+  ),
+);
+</code></pre>
+<p>Refresh token failing:</p>
+<p>Check:</p>
+<ul>
+<li><code>refreshEndpoint</code></li>
+<li><code>refreshTokenPath</code></li>
+<li><code>accessTokenPath</code></li>
+</ul>
+<hr>
+<h1 id="27-project-status">27. Project Status</h1>
+<h2 id="implemented">Implemented</h2>
+<ul>
+<li>SDK initialization</li>
+<li>contract parsing</li>
+<li>authentication login</li>
+<li>refresh token</li>
+<li>bearer token attach</li>
+<li>interceptors</li>
+<li>offline cache</li>
+<li>offline queue</li>
+<li>queue persistence</li>
+<li>manual queue flush</li>
+<li>auto flush on init</li>
+<li>SDK events</li>
+</ul>
+<h2 id="planned">Planned</h2>
+<ul>
+<li>retry policies</li>
+<li>observability</li>
+<li>upload progress</li>
+<li>cache invalidation</li>
+<li>advanced queue policies</li>
+</ul>
+</section>
+
+
+      <section class="summary">
+          <h2>Libraries</h2>
+        <dl>
+          <dt id="network_api_sdk">
+  <span class="name"><a href="network_api_sdk/">network_api_sdk</a></span> 
+
+</dt>
+<dd>Public entry point for the <code>network_api_sdk</code> package.
+</dd>
+
+        </dl>
+      </section>
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="https://github.com/mostafaalimorsy/networkapisdk">network_api_sdk package</a></li>
+</ol>
+
+    <h5 class="hidden-xs"><span class="package-name">network_api_sdk</span> <span class="package-kind">package</span></h5>
+    <ol>
+      <li class="section-title">Libraries</li>
+      <li><a href="network_api_sdk/">network_api_sdk</a></li>
+</ol>
+
+  </div>
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div>
+</main>
+<footer>
+  <span class="no-break">
+    network_api_sdk
+      0.1.0
+  </span>
+  
+</footer>
+
+
+<script src="static-assets/highlight.pack.js?v1"></script>
+<script src="static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

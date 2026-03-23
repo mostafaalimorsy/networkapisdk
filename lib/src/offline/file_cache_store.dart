@@ -3,12 +3,19 @@ import 'dart:io';
 
 import 'cache_store.dart';
 
+/// File-backed [CacheStore] implementation.
+///
+/// Values are stored as a single JSON map in [_file]. Missing, invalid, or
+/// unreadable files are treated as an empty cache.
 class FileCacheStore implements CacheStore {
   final File _file;
 
+  /// Creates a cache store backed by [_file].
   FileCacheStore(this._file);
 
   @override
+
+  /// Saves [value] under [key] and rewrites the backing file.
   Future<void> put(String key, Object? value) async {
     final map = await _readAll();
     map[key] = value;
@@ -16,12 +23,16 @@ class FileCacheStore implements CacheStore {
   }
 
   @override
+
+  /// Reads the cached value for [key].
   Future<Object?> get(String key) async {
     final map = await _readAll();
     return map[key];
   }
 
   @override
+
+  /// Removes [key] from the cache file.
   Future<void> remove(String key) async {
     final map = await _readAll();
     map.remove(key);
@@ -29,11 +40,11 @@ class FileCacheStore implements CacheStore {
   }
 
   @override
+
+  /// Clears the cache file.
   Future<void> clear() async {
     await _writeAll(<String, dynamic>{});
   }
-
-  // -------- helpers --------
 
   Future<Map<String, dynamic>> _readAll() async {
     try {
@@ -57,8 +68,6 @@ class FileCacheStore implements CacheStore {
         await dir.create(recursive: true);
       }
       await _file.writeAsString(jsonEncode(map), flush: true);
-    } catch (_) {
-      // don't crash
-    }
+    } catch (_) {}
   }
 }

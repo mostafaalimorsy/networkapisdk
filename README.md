@@ -1,21 +1,23 @@
+[![pub version](https://img.shields.io/pub/v/network_api_sdk.svg)]()
+[![likes](https://img.shields.io/pub/likes/network_api_sdk)]()
+[![popularity](https://img.shields.io/pub/popularity/network_api_sdk)]()
+[![pub points](https://img.shields.io/pub/points/network_api_sdk)]()
 
 # Network API SDK
 
-A reusable Flutter networking SDK that standardizes API communication, authentication, response normalization, interceptors, offline caching, offline queueing, persistence, and queue flushing across applications.
+A production-ready Flutter networking SDK with built-in authentication, interceptors, offline caching, and request queueing — designed for scalable and enterprise-grade applications.
 
 ---
 
 ## 🤖 SDK AI Assistant
 
-An official Custom GPT assistant is available to help developers integrate and troubleshoot the SDK.
+Get instant help integrating the SDK using the official AI assistant.
 
-Use it to:
-
-- Learn SDK initialization
-- Generate integration examples
-- Understand authentication and refresh tokens
-- Debug integration problems
-- Understand offline queue behavior
+It can:
+- Generate ready-to-use integration code
+- Explain authentication flows
+- Debug API issues
+- Guide offline and queue behavior
 
 Assistant:
 
@@ -72,6 +74,14 @@ It centralizes:
 - queue flushing
 
 The goal is to make API integration consistent across applications.
+
+## ❓ Why Network API SDK?
+
+- Eliminates repetitive API boilerplate
+- Standardizes authentication and error handling
+- Provides built-in offline support and persistence
+- Ensures consistent API contracts across applications
+- Designed for enterprise-scale Flutter projects
 
 ---
 
@@ -142,7 +152,7 @@ dependencies:
 
 ```yaml
 dependencies:
-  network_api_sdk: ^1.0.0
+  network_api_sdk: ^0.1.0
 ```
 
 Run:
@@ -156,7 +166,7 @@ flutter pub get
 # 4. Importing SDK
 
 ```dart
-import 'package:network_api_sdk/network_api_sdk_test.dart';
+import 'package:network_api_sdk/network_api_sdk.dart';
 ```
 
 Always import from the package root.
@@ -191,6 +201,26 @@ Application Layer
 ---
 
 # 6. Quick Start
+
+## ⚡ 30-Second Setup
+
+```dart
+Sdk.init(
+  SdkConfig(
+    baseUrl: 'https://api.example.com',
+    profile: SdkProfile.defaultSecure(),
+    contract: SdkContract.auto(
+      data: 'data',
+      message: 'message',
+      successFlag: 'isSuccess',
+      errorCode: 'code',
+    ),
+    output: OutputOptions.jsonOnly(),
+  ),
+);
+
+final res = await Sdk.instance.call.get('/users');
+```
 
 Initialize the SDK:
 
@@ -254,7 +284,10 @@ Example:
 SdkConfig(
   baseUrl: 'https://api.example.com',
   profile: SdkProfile.defaultSecure(),
-  contract: SdkContract.auto(),
+  contract: SdkContract.auto(
+    data: 'data',
+    message: 'message',
+  ),
   output: OutputOptions.jsonOnly(),
 )
 ```
@@ -291,8 +324,8 @@ const SdkProfile(
 |------|------|-------------|
 | `offlineEnabled` | `bool` | Enable offline features |
 | `queueWritesWhenOffline` | `bool` | Queue writes when offline |
-| `autoFlushQueue` | `bool` | Auto flush queue |
-| `flushInterval` | `Duration?` | Periodic flush interval |
+| `autoFlushQueue` | `bool` | Flush the queue once on init when `flushInterval` is `null` |
+| `flushInterval` | `Duration?` | Reserved for future scheduled flushing; not used by the built-in flow yet |
 
 Factories:
 
@@ -360,7 +393,7 @@ AuthOptions(
 | `refreshEndpoint` | `String` | Refresh API |
 | `accessTokenPath` | `String` | Access token path |
 | `refreshTokenPath` | `String` | Refresh token path |
-| `refreshRequestKey` | `String?` | Optional refresh body key |
+| `refreshRequestKey` | `String` | Refresh body key, defaults to `refreshToken` |
 
 ---
 
@@ -641,7 +674,10 @@ Sdk.init(
   SdkConfig(
     baseUrl: 'https://api.example.com',
     profile: SdkProfile.offlineFirstSecure(),
-    contract: SdkContract.auto(),
+    contract: SdkContract.auto(
+      data: 'data',
+      message: 'message',
+    ),
     output: OutputOptions.jsonOnly(),
   ),
 );
@@ -692,7 +728,10 @@ Sdk.init(
   SdkConfig(
     baseUrl: 'https://api.example.com',
     profile: SdkProfile.defaultSecure(),
-    contract: SdkContract.auto(),
+    contract: SdkContract.auto(
+      data: 'data',
+      message: 'message',
+    ),
     output: OutputOptions.jsonOnly(),
   ),
 );

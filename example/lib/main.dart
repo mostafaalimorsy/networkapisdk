@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:network_api_sdk/network_api_sdk_test.dart';
+import 'package:network_api_sdk/network_api_sdk.dart';
 
 void main() {
   Sdk.init(
@@ -61,24 +61,21 @@ class _MyHomePageState extends State<MyHomePage> {
 
     try {
       final response = await Sdk.instance.auth.login(
-        body: {
-          "username": "username",
-          "password": "password",
-        },
+        body: {"username": "username", "password": "password"},
         // rememberMe: false
       );
-      print("ok = ${response.ok}");
+      debugPrint("ok = ${response.ok}");
 
       if (response.ok) {
         final data = response.data;
 
         final displayName =
             data?["displayName"] ??
-                "${data?["firstName"] ?? ""} ${data?["lastName"] ?? ""}".trim();
+            "${data?["firstName"] ?? ""} ${data?["lastName"] ?? ""}".trim();
 
         setState(() {
           _result =
-          "Login success\nWelcome ${displayName.isEmpty ? "User" : displayName}";
+              "Login success\nWelcome ${displayName.isEmpty ? "User" : displayName}";
         });
 
         debugPrint("Login success");
@@ -102,6 +99,7 @@ class _MyHomePageState extends State<MyHomePage> {
       });
     }
   }
+
   Future<void> signOut() async {
     try {
       await Sdk.instance.auth.signOut();
@@ -119,6 +117,7 @@ class _MyHomePageState extends State<MyHomePage> {
       });
     }
   }
+
   Future<void> fetchContinents() async {
     setState(() {
       _loading = true;
@@ -128,7 +127,7 @@ class _MyHomePageState extends State<MyHomePage> {
     try {
       final response = await Sdk.instance.call.get("/continent");
 
-      print("continents ok = ${response.ok}");
+      debugPrint("continents ok = ${response.ok}");
 
       if (response.ok) {
         final data = response.data;
@@ -194,17 +193,12 @@ class _MyHomePageState extends State<MyHomePage> {
 
               ElevatedButton(
                 onPressed: signOut,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                ),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 child: const Text("Sign Out"),
               ),
 
               const SizedBox(height: 16),
-              Text(
-                _result,
-                textAlign: TextAlign.center,
-              ),
+              Text(_result, textAlign: TextAlign.center),
             ],
           ),
         ),

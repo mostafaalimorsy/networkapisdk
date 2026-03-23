@@ -3,10 +3,21 @@ import '../models/enums.dart';
 import '../models/sdk_error.dart';
 import '../models/sdk_response.dart';
 
+/// Applies an [SdkContract] to a normalized transport response.
+///
+/// This class is used internally by the SDK request layer.
 class ContractEvaluator {
+  /// The contract used for evaluation.
   final SdkContract contract;
+
+  /// Creates a contract evaluator.
   const ContractEvaluator(this.contract);
 
+  /// Evaluates a normalized response and returns an [SdkResponse].
+  ///
+  /// For successful JSON maps, [SdkContract.dataPath] is used to extract
+  /// [SdkResponse.data]. If that path is missing, the full JSON map is returned
+  /// instead.
   SdkResponse evaluate({
     required int? statusCode,
     required dynamic rawJson,
@@ -38,7 +49,6 @@ class ContractEvaluator {
         );
       }
 
-      // ✅ Fallback: لو dataPath مش موجود -> رجّع rawJson نفسه
       final extracted = _readPath(rawJson, contract.dataPath);
       final data = extracted ?? rawJson;
 
@@ -93,6 +103,7 @@ class ContractEvaluator {
 
     return null;
   }
+
   dynamic _readPath(Map<String, dynamic> json, String path) {
     if (path.isEmpty) return null;
     final parts = path.split('.');

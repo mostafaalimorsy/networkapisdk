@@ -269,7 +269,7 @@ packages:
     description:
       path: "."
       ref: HEAD
-      resolved-ref: aed189dec4a6671d6bea0cf2fbcf20c45e0875e8
+      resolved-ref: "383013155f5665547615ccb5b8d5ee9274fd71ba"
       url: "https://github.com/mostafaalimorsy/networkapisdk.git"
     source: git
     version: "0.1.0"

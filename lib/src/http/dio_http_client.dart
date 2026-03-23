@@ -1,26 +1,34 @@
 import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 
 import '../models/request_body.dart';
 import 'http_client.dart';
 
+/// Default [HttpClient] implementation backed by `package:dio`.
 class DioHttpClient implements HttpClient {
   final Dio _dio;
 
+  /// Creates a Dio-backed client for [Sdk].
   DioHttpClient({
     required String baseUrl,
     Duration connectTimeout = const Duration(seconds: 20),
     Duration receiveTimeout = const Duration(seconds: 30),
   }) : _dio = Dio(
-    BaseOptions(
-      baseUrl: baseUrl,
-      connectTimeout: connectTimeout,
-      receiveTimeout: receiveTimeout,
-      validateStatus: (_) => true,
-    ),
-  );
+          BaseOptions(
+            baseUrl: baseUrl,
+            connectTimeout: connectTimeout,
+            receiveTimeout: receiveTimeout,
+            validateStatus: (_) => true,
+          ),
+        );
 
   @override
+
+  /// Sends [request] through Dio and returns a flattened [HttpResponse].
+  ///
+  /// Non-2xx responses are returned normally. Transport exceptions without a
+  /// response are rethrown to the caller.
   Future<HttpResponse> send(HttpRequest request) async {
     final options = Options(
       method: request.method,
@@ -79,7 +87,6 @@ class DioHttpClient implements HttpClient {
       case BodyType.bytes:
         return body.value as Uint8List;
       case BodyType.formUrlEncoded:
-      // Dio لوحده بيظبطها غالباً لو content-type اتحدد
         return body.value as Map<String, dynamic>;
       case BodyType.multipart:
         final formData = FormData();

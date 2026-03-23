@@ -1,37 +1,67 @@
 import '../auth/token_store.dart';
 import '../http/http_client.dart';
+import '../interceptors/sdk_interceptor.dart';
 import 'auth_options.dart';
 import 'output_options.dart';
 import 'sdk_contract.dart';
 import 'sdk_profile.dart';
-import '../interceptors/sdk_interceptor.dart';
-
-import '../offline/queue_store.dart';
 import '../offline/cache_store.dart';
+import '../offline/queue_store.dart';
+
+/// Configures SDK initialization.
+///
+/// This is the main package configuration object. It defines the base URL,
+/// response contract, output normalization, authentication settings,
+/// interceptors, and the concrete stores or transport implementations to use.
 class SdkConfig {
+  /// Base URL passed to the default [DioHttpClient].
   final String baseUrl;
+
+  /// Runtime profile controlling offline cache and queue behavior.
   final SdkProfile profile;
+
+  /// Contract used to evaluate backend success and extract response data.
   final SdkContract contract;
+
+  /// Output normalization settings applied to transport responses.
   final OutputOptions output;
 
-  // ✅ Step 2: allow overriding http client in tests
+  /// Overrides the built-in HTTP client.
+  ///
+  /// When omitted, the SDK creates a [DioHttpClient] with [baseUrl].
   final HttpClient? httpOverride;
 
-  // ✅ Step 4: allow overriding token store in tests
+  /// Overrides the token store used by the built-in authentication manager.
+  ///
+  /// When omitted, the SDK uses [SecureTokenStore].
   final TokenStore? tokenStoreOverride;
 
-  // ✅ Step 4.2: auth options (login endpoint + token paths)
+  /// Enables the built-in login and refresh helpers when provided.
   final AuthOptions? auth;
 
-  // ✅ Step 5: interceptors
+  /// Interceptors executed in registration order.
+  ///
+  /// Request interceptors run after auth headers are attached. Response
+  /// interceptors receive normalized transport responses.
   final List<SdkInterceptor> interceptors;
 
-
-  // ✅ Step 6: caching
+  /// Overrides the cache store used for offline `GET` fallbacks.
+  ///
+  /// When omitted, [Sdk] uses [MemoryCacheStore].
   final CacheStore? cacheStoreOverride;
+
+  /// Overrides the queue store used for offline write persistence.
+  ///
+  /// When omitted, [Sdk] uses [MemoryQueueStore].
   final QueueStore? queueStoreOverride;
+
+  /// Additional queue feature flag for consumers and custom integrations.
+  ///
+  /// The built-in request flow currently uses [SdkProfile.queueWritesWhenOffline]
+  /// to decide whether offline writes are queued.
   final bool offlineQueueEnabled;
 
+  /// Creates SDK initialization settings.
   const SdkConfig({
     required this.baseUrl,
     required this.profile,

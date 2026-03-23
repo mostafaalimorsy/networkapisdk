@@ -1,3 +1,10 @@
+/// Public entry point for the `network_api_sdk` package.
+///
+/// Import this library to access the supported package surface, including
+/// [Sdk], [SdkConfig], authentication helpers, interceptors, request models,
+/// and offline extension points.
+library;
+
 export 'src/core/sdk.dart';
 
 // Configuration

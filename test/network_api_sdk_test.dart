@@ -3,11 +3,6 @@ import 'package:mocktail/mocktail.dart';
 import 'package:network_api_sdk/network_api_sdk.dart';
 import 'dart:io';
 
-
-import 'package:network_api_sdk/src/http/http_client.dart';
-import 'package:network_api_sdk/src/offline/file_cache_store.dart';
-import 'package:network_api_sdk/src/offline/file_queue_store.dart';
-
 class MockHttpClient extends Mock implements HttpClient {}
 
 HttpRequest captureRequest(Invocation inv) {
@@ -40,7 +35,8 @@ class AddHeaderInterceptor implements SdkInterceptor {
   }
 
   @override
-  Future<HttpResponse?> onResponse(HttpRequest req, HttpResponse res) async => res;
+  Future<HttpResponse?> onResponse(HttpRequest req, HttpResponse res) async =>
+      res;
 
   @override
   Future<SdkError?> onError(HttpRequest req, SdkError error) async => error;
@@ -75,7 +71,8 @@ class PatchErrorInterceptor implements SdkInterceptor {
   Future<HttpRequest?> onRequest(HttpRequest req) async => req;
 
   @override
-  Future<HttpResponse?> onResponse(HttpRequest req, HttpResponse res) async => res;
+  Future<HttpResponse?> onResponse(HttpRequest req, HttpResponse res) async =>
+      res;
 
   @override
   Future<SdkError?> onError(HttpRequest req, SdkError error) async {
@@ -289,7 +286,12 @@ void main() {
         return const HttpResponse(
           statusCode: 200,
           headers: {},
-          data: {"succeeded": true, "errorCode": 0, "message": "OK", "result": true},
+          data: {
+            "succeeded": true,
+            "errorCode": 0,
+            "message": "OK",
+            "result": true
+          },
         );
       });
 
@@ -329,7 +331,12 @@ void main() {
         return const HttpResponse(
           statusCode: 200,
           headers: {},
-          data: {"succeeded": true, "errorCode": 0, "message": "OK", "result": true},
+          data: {
+            "succeeded": true,
+            "errorCode": 0,
+            "message": "OK",
+            "result": true
+          },
         );
       });
 
@@ -368,7 +375,12 @@ void main() {
         return const HttpResponse(
           statusCode: 200,
           headers: {},
-          data: {"succeeded": true, "errorCode": 0, "message": "OK", "result": true},
+          data: {
+            "succeeded": true,
+            "errorCode": 0,
+            "message": "OK",
+            "result": true
+          },
         );
       });
 
@@ -632,7 +644,8 @@ void main() {
       expect(tokenStore.saved!.refreshToken, 'NEW_REFRESH');
     });
 
-    test('single-flight: multiple 401 triggers only one refresh call', () async {
+    test('single-flight: multiple 401 triggers only one refresh call',
+        () async {
       final mockHttp = MockHttpClient();
       final tokenStore = FakeTokenStore();
 
@@ -720,7 +733,9 @@ void main() {
   group('Step 4.4 - Refresh failure + session expired event', () {
     setUp(() => Sdk.resetForTest());
 
-    test('if refresh fails, it clears tokens, emits sessionExpired, and does not retry protected', () async {
+    test(
+        'if refresh fails, it clears tokens, emits sessionExpired, and does not retry protected',
+        () async {
       final mockHttp = MockHttpClient();
       final tokenStore = FakeTokenStore();
 
@@ -793,7 +808,9 @@ void main() {
       expect(events, contains(SdkEvent.sessionExpired));
     });
 
-    test('if refresh succeeds but retry is still 401, it clears tokens and emits sessionExpired', () async {
+    test(
+        'if refresh succeeds but retry is still 401, it clears tokens and emits sessionExpired',
+        () async {
       final mockHttp = MockHttpClient();
       final tokenStore = FakeTokenStore();
 
@@ -916,12 +933,14 @@ void main() {
   group('Step 4.6 - Token persistence on init', () {
     setUp(() => Sdk.resetForTest());
 
-    test('after init, protected call attaches token loaded from TokenStore', () async {
+    test('after init, protected call attaches token loaded from TokenStore',
+        () async {
       final mockHttp = MockHttpClient();
       final tokenStore = FakeTokenStore();
 
       await tokenStore.save(
-        const TokenPair(accessToken: 'PERSISTED_ACCESS', refreshToken: 'PERSISTED_REFRESH'),
+        const TokenPair(
+            accessToken: 'PERSISTED_ACCESS', refreshToken: 'PERSISTED_REFRESH'),
         rememberMe: true,
       );
 
@@ -932,7 +951,12 @@ void main() {
         return const HttpResponse(
           statusCode: 200,
           headers: {},
-          data: {"succeeded": true, "errorCode": 0, "message": "OK", "result": {"ok": true}},
+          data: {
+            "succeeded": true,
+            "errorCode": 0,
+            "message": "OK",
+            "result": {"ok": true}
+          },
         );
       });
 
@@ -971,7 +995,12 @@ void main() {
         return const HttpResponse(
           statusCode: 200,
           headers: {},
-          data: {"succeeded": true, "errorCode": 0, "message": "OK", "result": {"x": 1}},
+          data: {
+            "succeeded": true,
+            "errorCode": 0,
+            "message": "OK",
+            "result": {"x": 1}
+          },
         );
       });
 
@@ -1007,7 +1036,12 @@ void main() {
         return const HttpResponse(
           statusCode: 200,
           headers: {},
-          data: {"succeeded": true, "errorCode": 0, "message": "OK", "result": {"x": 1}},
+          data: {
+            "succeeded": true,
+            "errorCode": 0,
+            "message": "OK",
+            "result": {"x": 1}
+          },
         );
       });
 
@@ -1124,7 +1158,8 @@ void main() {
   group('Step 6.2 - Offline write queues request', () {
     setUp(() => Sdk.resetForTest());
 
-    test('when offline, POST is queued if queueWritesWhenOffline=true', () async {
+    test('when offline, POST is queued if queueWritesWhenOffline=true',
+        () async {
       final mockHttp = MockHttpClient();
 
       when(() => mockHttp.send(any())).thenThrow(Exception('offline'));
@@ -1159,7 +1194,8 @@ void main() {
   group('Step 6.3 - Flush queue sends queued writes', () {
     setUp(() => Sdk.resetForTest());
 
-    test('flush sends queued requests in order and clears queue on success', () async {
+    test('flush sends queued requests in order and clears queue on success',
+        () async {
       final mockHttp = MockHttpClient();
 
       when(() => mockHttp.send(any())).thenThrow(Exception('offline'));
@@ -1180,8 +1216,10 @@ void main() {
         ),
       );
 
-      final r1 = await Sdk.instance.call.post('/a', body: RequestBody.json({"x": 1}));
-      final r2 = await Sdk.instance.call.put('/b', body: RequestBody.json({"y": 2}));
+      final r1 =
+          await Sdk.instance.call.post('/a', body: RequestBody.json({"x": 1}));
+      final r2 =
+          await Sdk.instance.call.put('/b', body: RequestBody.json({"y": 2}));
 
       expect(r1.ok, isTrue);
       expect((r1.data as Map)['queued'], true);
@@ -1194,7 +1232,12 @@ void main() {
         return const HttpResponse(
           statusCode: 200,
           headers: {},
-          data: {"succeeded": true, "errorCode": 0, "message": "OK", "result": true},
+          data: {
+            "succeeded": true,
+            "errorCode": 0,
+            "message": "OK",
+            "result": true
+          },
         );
       });
 
@@ -1225,7 +1268,8 @@ void main() {
       } catch (_) {}
     });
 
-    test('7.1 Cache persists across SDK restart (GET cached when offline)', () async {
+    test('7.1 Cache persists across SDK restart (GET cached when offline)',
+        () async {
       final mockHttp = MockHttpClient();
 
       // First call online -> success
@@ -1336,8 +1380,10 @@ void main() {
       );
 
       // Queue 2 writes
-      final w1 = await Sdk.instance.call.post('/a', body: RequestBody.json({"x": 1}));
-      final w2 = await Sdk.instance.call.put('/b', body: RequestBody.json({"y": 2}));
+      final w1 =
+          await Sdk.instance.call.post('/a', body: RequestBody.json({"x": 1}));
+      final w2 =
+          await Sdk.instance.call.put('/b', body: RequestBody.json({"y": 2}));
       expect(w1.ok, isTrue);
       expect(w1.source, ResponseSource.queued);
       expect((w1.data as Map)['queued'], true);
@@ -1356,7 +1402,12 @@ void main() {
         return const HttpResponse(
           statusCode: 200,
           headers: {},
-          data: {"succeeded": true, "errorCode": 0, "message": "OK", "result": true},
+          data: {
+            "succeeded": true,
+            "errorCode": 0,
+            "message": "OK",
+            "result": true
+          },
         );
       });
 
@@ -1392,7 +1443,8 @@ void main() {
       expect(flushedAgain, 0);
     });
 
-    test('7.3 AutoFlush on init flushes persisted queue once (no timer)', () async {
+    test('7.3 AutoFlush on init flushes persisted queue once (no timer)',
+        () async {
       final mockHttp = MockHttpClient();
 
       // Phase 1: offline -> queue one write to disk
@@ -1421,7 +1473,8 @@ void main() {
         ),
       );
 
-      final queued = await Sdk.instance.call.post('/auto', body: RequestBody.json({"k": "v"}));
+      final queued = await Sdk.instance.call
+          .post('/auto', body: RequestBody.json({"k": "v"}));
       expect(queued.ok, isTrue);
       expect(queued.source, ResponseSource.queued);
 
@@ -1435,7 +1488,12 @@ void main() {
         return const HttpResponse(
           statusCode: 200,
           headers: {},
-          data: {"succeeded": true, "errorCode": 0, "message": "OK", "result": true},
+          data: {
+            "succeeded": true,
+            "errorCode": 0,
+            "message": "OK",
+            "result": true
+          },
         );
       });
 
@@ -1450,7 +1508,7 @@ void main() {
             offlineEnabled: true,
             queueWritesWhenOffline: true,
             autoFlushQueue: true, // ✅ flush once on init
-            flushInterval: null,  // ✅ no timer in tests
+            flushInterval: null, // ✅ no timer in tests
           ),
           contract: SdkContract.auto(
             data: 'result',
@@ -1472,6 +1530,4 @@ void main() {
       expect(flushedAgain, 0);
     });
   });
-
-
 }
