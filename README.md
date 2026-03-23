@@ -134,7 +134,7 @@ The goal is to make API integration consistent across applications.
 
 ```yaml
 dependencies:
-  sdk_core:
+  network_api_sdk:
     path: ../network_api_sdk
 ```
 
@@ -142,7 +142,7 @@ dependencies:
 
 ```yaml
 dependencies:
-  sdk_core: ^1.0.0
+  network_api_sdk: ^1.0.0
 ```
 
 Run:
