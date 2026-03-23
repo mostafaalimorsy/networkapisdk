@@ -1,11 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:sdk_core/sdk_core.dart';
-import 'package:sdk_core/src/http/http_client.dart';
+import 'package:network_api_sdk/network_api_sdk.dart';
 import 'dart:io';
 
-import 'package:sdk_core/src/offline/file_cache_store.dart';
-import 'package:sdk_core/src/offline/file_queue_store.dart';
+
+import 'package:network_api_sdk/src/http/http_client.dart';
+import 'package:network_api_sdk/src/offline/file_cache_store.dart';
+import 'package:network_api_sdk/src/offline/file_queue_store.dart';
 
 class MockHttpClient extends Mock implements HttpClient {}
 

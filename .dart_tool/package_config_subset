@@ -234,8 +234,8 @@ flutter_web_plugins
 3.7
 file:///Users/mostafamorsy/Downloads/flutter3.32.4/packages/flutter_web_plugins/
 file:///Users/mostafamorsy/Downloads/flutter3.32.4/packages/flutter_web_plugins/lib/
-sdk_core
-3.8
+network_api_sdk
+3.3
 file:///Users/mostafamorsy/StudioProjects/networkapisdk/
 file:///Users/mostafamorsy/StudioProjects/networkapisdk/lib/
 2

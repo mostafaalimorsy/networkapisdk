@@ -1,11 +1,11 @@
 {
   "roots": [
-    "sdk_core"
+    "network_api_sdk"
   ],
   "packages": [
     {
-      "name": "sdk_core",
-      "version": "0.0.1",
+      "name": "network_api_sdk",
+      "version": "0.1.0",
       "dependencies": [
         "connectivity_plus",
         "dio",

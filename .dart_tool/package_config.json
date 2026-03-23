@@ -356,10 +356,10 @@
       "languageVersion": "3.8"
     },
     {
-      "name": "sdk_core",
+      "name": "network_api_sdk",
       "rootUri": "../",
       "packageUri": "lib/",
-      "languageVersion": "3.8"
+      "languageVersion": "3.3"
     }
   ],
   "generator": "pub",

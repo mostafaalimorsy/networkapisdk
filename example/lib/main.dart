@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sdk_core/sdk_core.dart';
+import 'package:network_api_sdk/network_api_sdk.dart';
 
 void main() {
   Sdk.init(
