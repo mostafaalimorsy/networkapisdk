@@ -264,6 +264,15 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
+  network_api_sdk:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: HEAD
+      resolved-ref: "7690199d2708b4923dbfeb153aab023e74e2ddfb"
+      url: "https://github.com/mostafaalimorsy/networkapisdk.git"
+    source: git
+    version: "0.1.0"
   nm:
     dependency: transitive
     description:
@@ -352,15 +361,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.8"
-  sdk_core:
-    dependency: "direct main"
-    description:
-      path: "."
-      ref: HEAD
-      resolved-ref: f6869e92714ff629b4fe8bb8f86d5bb2c7729825
-      url: "https://github.com/mostafaalimorsy/networkapisdk.git"
-    source: git
-    version: "0.0.1"
   sky_engine:
     dependency: transitive
     description: flutter

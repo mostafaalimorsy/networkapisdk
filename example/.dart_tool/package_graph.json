@@ -9,7 +9,7 @@
       "dependencies": [
         "cupertino_icons",
         "flutter",
-        "sdk_core"
+        "network_api_sdk"
       ],
       "devDependencies": [
         "flutter_lints",
@@ -52,8 +52,8 @@
       ]
     },
     {
-      "name": "sdk_core",
-      "version": "0.0.1",
+      "name": "network_api_sdk",
+      "version": "0.1.0",
       "dependencies": [
         "connectivity_plus",
         "dio",
@@ -268,19 +268,6 @@
       ]
     },
     {
-      "name": "connectivity_plus",
-      "version": "6.1.5",
-      "dependencies": [
-        "collection",
-        "connectivity_plus_platform_interface",
-        "flutter",
-        "flutter_web_plugins",
-        "meta",
-        "nm",
-        "web"
-      ]
-    },
-    {
       "name": "dio",
       "version": "5.9.2",
       "dependencies": [
@@ -291,6 +278,19 @@
         "meta",
         "mime",
         "path"
+      ]
+    },
+    {
+      "name": "connectivity_plus",
+      "version": "6.1.5",
+      "dependencies": [
+        "collection",
+        "connectivity_plus_platform_interface",
+        "flutter",
+        "flutter_web_plugins",
+        "meta",
+        "nm",
+        "web"
       ]
     },
     {
@@ -391,6 +391,31 @@
       ]
     },
     {
+      "name": "dio_web_adapter",
+      "version": "2.1.2",
+      "dependencies": [
+        "dio",
+        "http_parser",
+        "meta",
+        "web"
+      ]
+    },
+    {
+      "name": "mime",
+      "version": "2.0.0",
+      "dependencies": []
+    },
+    {
+      "name": "http_parser",
+      "version": "4.1.2",
+      "dependencies": [
+        "collection",
+        "source_span",
+        "string_scanner",
+        "typed_data"
+      ]
+    },
+    {
       "name": "nm",
       "version": "0.5.0",
       "dependencies": [
@@ -421,31 +446,6 @@
         "material_color_utilities",
         "meta",
         "vector_math"
-      ]
-    },
-    {
-      "name": "dio_web_adapter",
-      "version": "2.1.2",
-      "dependencies": [
-        "dio",
-        "http_parser",
-        "meta",
-        "web"
-      ]
-    },
-    {
-      "name": "mime",
-      "version": "2.0.0",
-      "dependencies": []
-    },
-    {
-      "name": "http_parser",
-      "version": "4.1.2",
-      "dependencies": [
-        "collection",
-        "source_span",
-        "string_scanner",
-        "typed_data"
       ]
     },
     {
@@ -488,6 +488,13 @@
       ]
     },
     {
+      "name": "typed_data",
+      "version": "1.4.0",
+      "dependencies": [
+        "collection"
+      ]
+    },
+    {
       "name": "dbus",
       "version": "0.7.12",
       "dependencies": [
@@ -495,13 +502,6 @@
         "ffi",
         "meta",
         "xml"
-      ]
-    },
-    {
-      "name": "typed_data",
-      "version": "1.4.0",
-      "dependencies": [
-        "collection"
       ]
     },
     {

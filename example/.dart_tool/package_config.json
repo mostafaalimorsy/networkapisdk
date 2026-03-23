@@ -206,6 +206,12 @@
       "languageVersion": "3.2"
     },
     {
+      "name": "network_api_sdk",
+      "rootUri": "file:///Users/mostafamorsy/.pub-cache/git/networkapisdk-7690199d2708b4923dbfeb153aab023e74e2ddfb/",
+      "packageUri": "lib/",
+      "languageVersion": "3.3"
+    },
+    {
       "name": "nm",
       "rootUri": "file:///Users/mostafamorsy/.pub-cache/hosted/pub.dev/nm-0.5.0",
       "packageUri": "lib/",
@@ -270,12 +276,6 @@
       "rootUri": "file:///Users/mostafamorsy/.pub-cache/hosted/pub.dev/plugin_platform_interface-2.1.8",
       "packageUri": "lib/",
       "languageVersion": "3.0"
-    },
-    {
-      "name": "sdk_core",
-      "rootUri": "file:///Users/mostafamorsy/.pub-cache/git/networkapisdk-f6869e92714ff629b4fe8bb8f86d5bb2c7729825/",
-      "packageUri": "lib/",
-      "languageVersion": "3.8"
     },
     {
       "name": "sky_engine",
