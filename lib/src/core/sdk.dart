@@ -8,6 +8,7 @@ import '../config/sdk_config.dart';
 import '../http/dio_http_client.dart';
 import '../http/http_client.dart';
 import '../interceptors/interceptor_runner.dart';
+import '../interceptors/built_in_logging_interceptor.dart';
 import '../offline/cache_store.dart';
 import '../offline/queue_store.dart';
 import '../offline/sdk_queue.dart';
@@ -114,7 +115,15 @@ class Sdk {
   void _boot() {
     // Core utilities first (used by call/auth)
     events = SdkEvents();
-    interceptors = InterceptorRunner(config.interceptors);
+    final mergedInterceptors = [...config.interceptors];
+
+    if (config.logging.enabled) {
+      mergedInterceptors.add(
+        BuiltInLoggingInterceptor(config.logging),
+      );
+    }
+
+    interceptors = InterceptorRunner(mergedInterceptors);
 
     authManager = AuthManager(
       config.tokenStoreOverride ?? const SecureTokenStore(),

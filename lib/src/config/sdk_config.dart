@@ -1,3 +1,5 @@
+import 'package:network_api_sdk/src/config/logging_options.dart';
+
 import '../auth/token_store.dart';
 import '../http/http_client.dart';
 import '../interceptors/sdk_interceptor.dart';
@@ -61,6 +63,12 @@ class SdkConfig {
   /// to decide whether offline writes are queued.
   final bool offlineQueueEnabled;
 
+  /// to log the requests.
+  final LoggingOptions logging;
+
+  /// Returns the current language code for outgoing requests.
+  final Future<String?> Function()? languageProvider;
+
   /// Creates SDK initialization settings.
   const SdkConfig({
     required this.baseUrl,
@@ -73,6 +81,8 @@ class SdkConfig {
     this.cacheStoreOverride,
     this.queueStoreOverride,
     List<SdkInterceptor>? interceptors,
+    this.logging = const LoggingOptions.disabled(),
+    required this.languageProvider,
     this.offlineQueueEnabled = true,
   }) : interceptors = interceptors ?? const [];
 }

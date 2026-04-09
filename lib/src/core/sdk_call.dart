@@ -32,6 +32,14 @@ class SdkCall {
   }) async {
     final h = <String, String>{}..addAll(baseHeaders);
 
+    final languageProvider = _sdk.config.languageProvider;
+    if (languageProvider != null && !h.containsKey('Accept-Language')) {
+      final lang = await languageProvider();
+      if (lang != null && lang.isNotEmpty) {
+        h['Accept-Language'] = lang;
+      }
+    }
+
     if (attachAuth) {
       final pair = await _sdk.authManager.load();
       final access = pair?.accessToken;

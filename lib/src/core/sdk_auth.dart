@@ -93,7 +93,12 @@ class SdkAuth {
 
     return res;
   }
-
+    /// Returns `true` when a non-empty access token is currently available.
+    Future<bool> isLoggedIn() async {
+      final pair = await _sdk.authManager.load();
+      final access = pair?.accessToken;
+      return access != null && access.isNotEmpty;
+    }
   /// Refreshes the current session using the stored refresh token.
   ///
   /// Returns the new [TokenPair] when refresh succeeds, or `null` when auth is
