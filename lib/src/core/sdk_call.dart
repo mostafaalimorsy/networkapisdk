@@ -17,8 +17,9 @@ import '../offline/queue_store.dart';
 ///
 /// When `attachAuth` is `true`, the SDK attaches the current bearer token,
 /// retries one time after a `401` by attempting a refresh, and emits
-/// [SdkEvent.sessionExpired] if recovery fails. Network failures may fall back
-/// to offline cache or request queueing depending on the active profile.
+/// [SdkEvent.sessionExpired] if recovery fails. Network failures return clear
+/// network errors and may fall back to offline cache or request queueing
+/// depending on the active profile.
 class SdkCall {
   final Sdk _sdk;
   final JsonNormalizer _normalizer = const JsonNormalizer();
@@ -62,7 +63,7 @@ class SdkCall {
   /// Successful responses are normalized, evaluated with the configured
   /// contract, and may be cached when offline support is enabled. If a network
   /// failure occurs and a cached value exists, the returned [SdkResponse] uses
-  /// [ResponseSource.cache].
+  /// [ResponseSource.cache] with a clear offline message.
   ///
   /// ```dart
   /// final response = await Sdk.instance.call.get('/profile');
@@ -86,8 +87,9 @@ class SdkCall {
 
   /// Sends a `POST` request.
   ///
-  /// On network failure, non-`GET` requests can be returned as queued when
-  /// offline queueing is enabled in the active profile.
+  /// On network failure, non-`GET` requests can be returned as queued with a
+  /// clear offline message when offline queueing is enabled in the active
+  /// profile.
   Future<SdkResponse> post(
     String endpoint, {
     Map<String, dynamic>? query,
@@ -306,7 +308,7 @@ class SdkCall {
             ok: true,
             statusCode: 200,
             source: ResponseSource.cache,
-            message: 'OK (cache)',
+            message: 'No internet connection. Returned cached data.',
             data: cached,
             error: null,
           );
@@ -321,14 +323,14 @@ class SdkCall {
           ok: true,
           statusCode: 202,
           source: ResponseSource.queued,
-          message: 'Queued',
+          message: 'No internet connection. Request queued for retry.',
           data: const <String, dynamic>{'queued': true},
           error: null,
         );
       }
 
       // fallback: error + interceptors
-      var sdkError = SdkError(type: ErrorType.unknown, message: e.toString());
+      var sdkError = _mapNetworkError(e);
       sdkError = await _sdk.interceptors.runError(req, sdkError);
 
       return SdkResponse(
@@ -342,6 +344,7 @@ class SdkCall {
     }
   }
 
+  /// Returns `true` when [e] represents a connectivity or transport failure.
   bool _isNetworkError(Object e) {
     // ✅ tests throw: Exception('offline')
     // treat it as network failure to activate cache/queue behavior
@@ -361,5 +364,47 @@ class SdkCall {
         s.contains('connection closed') ||
         s.contains('connection reset') ||
         s.contains('broken pipe');
+  }
+
+  /// Maps low-level connectivity failures to clear SDK network errors.
+  SdkError _mapNetworkError(Object e) {
+    final s = e.toString().toLowerCase();
+
+    if (e is TimeoutException ||
+        s.contains('timeoutexception') ||
+        s.contains('connection timeout') ||
+        s.contains('receive timeout') ||
+        s.contains('send timeout')) {
+      return const SdkError(
+        type: ErrorType.offline,
+        message: 'Connection timeout. Please try again.',
+      );
+    }
+
+    if (s.contains('offline') ||
+        s.contains('socketexception') ||
+        s.contains('failed host lookup') ||
+        s.contains('network is unreachable') ||
+        s.contains('connection refused') ||
+        s.contains('connection closed') ||
+        s.contains('connection reset') ||
+        s.contains('broken pipe')) {
+      return const SdkError(
+        type: ErrorType.offline,
+        message: 'No internet connection.',
+      );
+    }
+
+    if (s.contains('handshakeexception') || s.contains('certificate')) {
+      return const SdkError(
+        type: ErrorType.offline,
+        message: 'Secure connection failed.',
+      );
+    }
+
+    return const SdkError(
+      type: ErrorType.offline,
+      message: 'Network request failed. Please check your connection and try again.',
+    );
   }
 }
