@@ -13,7 +13,7 @@ class SdkAuth {
   /// Internal constructor used by [Sdk].
   SdkAuth.internal(this._sdk);
 
-  /// Logs in with [body] and stores the returned tokens only when [rememberMe] is `true`.
+  /// Logs in with [body] and stores the returned tokens for the current session.
   ///
   /// This sends a `POST` request to the configured login endpoint with
   /// [RequestBody.json] and `attachAuth: false`. On success, tokens are
@@ -86,20 +86,19 @@ class SdkAuth {
       );
     }
 
-    if (rememberMe) {
-      await _sdk.authManager.save(
-        TokenPair(accessToken: access, refreshToken: refresh),
-        rememberMe: true,
-      );
-    }
+    await _sdk.authManager.save(
+      TokenPair(accessToken: access, refreshToken: refresh),
+      rememberMe: rememberMe,
+    );
 
     return res;
   }
 
-  /// Returns `true` when a saved non-empty access token is available.
+  /// Returns `true` when a non-empty access token is available.
   ///
-  /// This only checks persisted auth state in the configured token store.
-  /// It does not validate token expiry.
+  /// This checks the current in-memory session first, then falls back to any
+  /// persisted auth state in the configured token store. It does not validate
+  /// token expiry.
   Future<bool> isLoggedIn() async {
     final pair = await _sdk.authManager.load();
     final accessToken = pair?.accessToken;
@@ -111,8 +110,8 @@ class SdkAuth {
   ///
   /// Returns the new [TokenPair] when refresh succeeds, or `null` when auth is
   /// not configured, no refresh token exists, the refresh call fails, or token
-  /// extraction fails. Successful refreshes are persisted with
-  /// `rememberMe: true`.
+  /// extraction fails. Successful refreshes keep the current session
+  /// persistence behavior managed by [AuthManager].
   Future<TokenPair?> refresh() async {
     final opts = _sdk.config.auth;
     if (opts == null) return null;
@@ -143,22 +142,22 @@ class SdkAuth {
     }
 
     final pair = TokenPair(accessToken: access, refreshToken: refresh);
-    await _sdk.authManager.save(pair, rememberMe: true);
+    await _sdk.authManager.save(pair, rememberMe: _sdk.authManager.rememberMe);
     return pair;
   }
 
-  /// Saves tokens directly to the configured [TokenStore] only when [rememberMe] is `true`.
+  /// Saves tokens directly for the current session.
+  ///
+  /// Persistent storage is controlled by [rememberMe].
   Future<void> saveTokens({
     required String accessToken,
     required String refreshToken,
     bool rememberMe = true,
   }) async {
-    if (rememberMe) {
-      await _sdk.authManager.save(
-        TokenPair(accessToken: accessToken, refreshToken: refreshToken),
-        rememberMe: true,
-      );
-    }
+    await _sdk.authManager.save(
+      TokenPair(accessToken: accessToken, refreshToken: refreshToken),
+      rememberMe: rememberMe,
+    );
   }
 
   /// Restores any previously saved session.
