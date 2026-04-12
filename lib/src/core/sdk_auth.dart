@@ -13,7 +13,7 @@ class SdkAuth {
   /// Internal constructor used by [Sdk].
   SdkAuth.internal(this._sdk);
 
-  /// Logs in with [body] and stores the returned tokens.
+  /// Logs in with [body] and stores the returned tokens only when [rememberMe] is `true`.
   ///
   /// This sends a `POST` request to the configured login endpoint with
   /// [RequestBody.json] and `attachAuth: false`. On success, tokens are
@@ -86,19 +86,27 @@ class SdkAuth {
       );
     }
 
-    await _sdk.authManager.save(
-      TokenPair(accessToken: access, refreshToken: refresh),
-      rememberMe: rememberMe,
-    );
+    if (rememberMe) {
+      await _sdk.authManager.save(
+        TokenPair(accessToken: access, refreshToken: refresh),
+        rememberMe: true,
+      );
+    }
 
     return res;
   }
-    /// Returns `true` when a non-empty access token is currently available.
-    Future<bool> isLoggedIn() async {
-      final pair = await _sdk.authManager.load();
-      final access = pair?.accessToken;
-      return access != null && access.isNotEmpty;
-    }
+
+  /// Returns `true` when a saved non-empty access token is available.
+  ///
+  /// This only checks persisted auth state in the configured token store.
+  /// It does not validate token expiry.
+  Future<bool> isLoggedIn() async {
+    final pair = await _sdk.authManager.load();
+    final accessToken = pair?.accessToken;
+
+    return accessToken != null && accessToken.isNotEmpty;
+  }
+
   /// Refreshes the current session using the stored refresh token.
   ///
   /// Returns the new [TokenPair] when refresh succeeds, or `null` when auth is
@@ -139,16 +147,18 @@ class SdkAuth {
     return pair;
   }
 
-  /// Saves tokens directly to the configured [TokenStore].
+  /// Saves tokens directly to the configured [TokenStore] only when [rememberMe] is `true`.
   Future<void> saveTokens({
     required String accessToken,
     required String refreshToken,
     bool rememberMe = true,
   }) async {
-    await _sdk.authManager.save(
-      TokenPair(accessToken: accessToken, refreshToken: refreshToken),
-      rememberMe: rememberMe,
-    );
+    if (rememberMe) {
+      await _sdk.authManager.save(
+        TokenPair(accessToken: accessToken, refreshToken: refreshToken),
+        rememberMe: true,
+      );
+    }
   }
 
   /// Restores any previously saved session.
