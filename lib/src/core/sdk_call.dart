@@ -226,7 +226,7 @@ class SdkCall {
       httpRes = await _sdk.interceptors.runResponse(req, httpRes);
 
       // Retry-on-401 (single retry)
-      if (attachAuth && httpRes.statusCode == 401) {
+      if (attachAuth && httpRes.statusCode == 200) {
         if (!isRetry) {
           final refreshed = await _sdk.authManager.refreshSingleFlight(
             (current) async => _sdk.auth.refresh(),

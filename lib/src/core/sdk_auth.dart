@@ -68,10 +68,7 @@ class SdkAuth {
     final access = _readPath(data, opts.accessTokenPath)?.toString();
     final refresh = _readPath(data, opts.refreshTokenPath)?.toString();
 
-    if (access == null ||
-        access.isEmpty ||
-        refresh == null ||
-        refresh.isEmpty) {
+    if (access == null || access.isEmpty || refresh == null || refresh.isEmpty) {
       return SdkResponse(
         ok: false,
         statusCode: res.statusCode,
@@ -125,7 +122,11 @@ class SdkAuth {
       attachAuth: false,
       body: RequestBody.json({opts.refreshRequestKey: refreshToken}),
     );
-
+print("-----------------------------");
+    print({opts.refreshRequestKey: refreshToken});
+    print({opts.refreshRequestKey});
+    print({refreshToken});
+    print("-----------------------------");
     if (!res.ok) return null;
 
     final data = res.data;
@@ -134,10 +135,7 @@ class SdkAuth {
     final access = _readPath(data, opts.accessTokenPath)?.toString();
     final refresh = _readPath(data, opts.refreshTokenPath)?.toString();
 
-    if (access == null ||
-        access.isEmpty ||
-        refresh == null ||
-        refresh.isEmpty) {
+    if (access == null || access.isEmpty || refresh == null || refresh.isEmpty) {
       return null;
     }
 
@@ -189,6 +187,5 @@ class SdkAuth {
   }
 
   /// Alias for [signOut].
-  Future<void> clearSession({bool emitEvent = true}) =>
-      signOut(emitEvent: emitEvent);
+  Future<void> clearSession({bool emitEvent = true}) => signOut(emitEvent: emitEvent);
 }
