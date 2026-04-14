@@ -122,11 +122,7 @@ class SdkAuth {
       attachAuth: false,
       body: RequestBody.json({opts.refreshRequestKey: refreshToken}),
     );
-print("-----------------------------");
-    print({opts.refreshRequestKey: refreshToken});
-    print({opts.refreshRequestKey});
-    print({refreshToken});
-    print("-----------------------------");
+
     if (!res.ok) return null;
 
     final data = res.data;
