@@ -27,14 +27,25 @@ class AuthManager {
   /// calls reuse the cached value.
   Future<TokenPair?> load() {
     if (_cached != null) return Future.value(_cached);
+    if (_loadFuture != null) return _loadFuture!;
 
-    _loadFuture ??= _store.read().then((tokens) {
-      _cached = tokens;
-      _rememberMe = tokens != null;
-      return tokens;
+    late final Future<TokenPair?> readFuture;
+    readFuture = _store.read().then((tokens) {
+      // Ignore stale reads that started before a later save/clear replaced the
+      // current in-flight load future.
+      if (identical(_loadFuture, readFuture)) {
+        _cached = tokens;
+        _rememberMe = tokens != null;
+        return tokens;
+      }
+
+      // A newer save/clear/load already updated the current state, so return the
+      // latest cached value instead of overwriting it with stale data.
+      return _cached;
     });
 
-    return _loadFuture!;
+    _loadFuture = readFuture;
+    return readFuture;
   }
 
   /// Saves tokens to memory for the current session and persists them only
