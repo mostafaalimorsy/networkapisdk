@@ -69,6 +69,12 @@ class SdkConfig {
   /// Returns the current language code for outgoing requests.
   final Future<String?> Function()? languageProvider;
 
+  /// Callback triggered when the session expires and refresh fails.
+  ///
+  /// This allows the application to handle navigation (e.g., redirect to login)
+  /// without coupling the SDK to any UI framework.
+  final Future<void> Function()? onSessionExpired;
+
   /// Creates SDK initialization settings.
   const SdkConfig({
     required this.baseUrl,
@@ -83,6 +89,7 @@ class SdkConfig {
     List<SdkInterceptor>? interceptors,
     this.logging = const LoggingOptions.disabled(),
     required this.languageProvider,
+    this.onSessionExpired,
     this.offlineQueueEnabled = true,
   }) : interceptors = interceptors ?? const [];
 }

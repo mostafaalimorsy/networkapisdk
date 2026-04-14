@@ -233,6 +233,8 @@ class SdkCall {
           );
 
           if (refreshed != null) {
+            _sdk.resetSessionExpiredHandling();
+
             return _send(
               endpoint: endpoint,
               method: method,
@@ -246,8 +248,9 @@ class SdkCall {
           }
         }
 
-        await _sdk.authManager.clear();
-        _sdk.events.emit(SdkEvent.sessionExpired);
+        await _sdk.handleSessionExpired(
+          onSessionExpired: _sdk.config.onSessionExpired,
+        );
 
         return SdkResponse(
           ok: false,
