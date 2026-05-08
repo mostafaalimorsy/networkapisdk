@@ -1,6 +1,6 @@
 [![pub version](https://img.shields.io/pub/v/network_api_sdk.svg)]()
 [![likes](https://img.shields.io/pub/likes/network_api_sdk)]()
-[![popularity](https://img.shields.io/pub/popularity/network_api_sdk)]()
+[![monthly downloads](https://img.shields.io/pub/dm/network_api_sdk)](https://pub.dev/packages/network_api_sdk/score)
 [![pub points](https://img.shields.io/pub/points/network_api_sdk)]()
 
 # Network API SDK
@@ -289,6 +289,9 @@ SdkConfig(
     message: 'message',
   ),
   output: OutputOptions.jsonOnly(),
+  onSessionExpired: () async {
+    // Navigate to login screen
+  },
 )
 ```
 
@@ -304,6 +307,8 @@ SdkConfig(
 | `contract` | `SdkContract` | Yes | API contract |
 | `output` | `OutputOptions` | Yes | Response normalization |
 | `interceptors` | `List<SdkInterceptor>?` | No | SDK interceptors |
+| `languageProvider` | `Future<String?> Function()?` | Yes | Provides the current request language |
+| `onSessionExpired` | `Future<void> Function()?` | No | Callback triggered when refresh fails and the session expires |
 
 ---
 
@@ -479,6 +484,19 @@ await Sdk.instance.auth.login(
 );
 ```
 
+### Check Login State
+
+Check whether the SDK currently has an active authenticated session.
+
+```dart
+final isLoggedIn = await Sdk.instance.auth.isLoggedIn();
+```
+
+This supports both:
+
+- persisted sessions when `rememberMe = true`
+- in-memory sessions when `rememberMe = false`
+
 ### Login parameters
 
 | Parameter | Type | Description |
@@ -491,6 +509,39 @@ await Sdk.instance.auth.login(
 
 ```dart
 await Sdk.instance.auth.signOut();
+```
+
+### Session Expiration Handling
+
+When a protected request returns `401`, the SDK automatically:
+
+1. attempts token refresh
+2. saves the new token pair
+3. retries the original request
+
+If refresh fails, the SDK:
+
+- clears the active session
+- emits `SdkEvent.sessionExpired`
+- triggers `onSessionExpired` if configured
+
+Example:
+
+```dart
+Sdk.init(
+  SdkConfig(
+    baseUrl: 'https://api.example.com',
+    profile: SdkProfile.defaultSecure(),
+    contract: SdkContract.auto(
+      data: 'data',
+      message: 'message',
+    ),
+    output: OutputOptions.jsonOnly(),
+    onSessionExpired: () async {
+      // Redirect user to login screen
+    },
+  ),
+);
 ```
 
 ---
@@ -698,9 +749,21 @@ Attach Bearer
  ↓
 401
  ↓
-Refresh
+Refresh Token
  ↓
-Retry Request
+Save New Tokens
+ ↓
+Retry Original Request
+ ↓
+Success
+
+If Refresh Fails:
+ ↓
+Clear Session
+ ↓
+Emit sessionExpired
+ ↓
+Trigger onSessionExpired Callback
 ```
 
 Offline queue flow:
