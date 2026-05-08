@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import '../config/logging_options.dart';
 import '../http/http_client.dart';
 import '../models/sdk_error.dart';
@@ -16,13 +17,13 @@ class BuiltInLoggingInterceptor implements SdkInterceptor {
     final headers = options.logHeaders ? _maskHeaders(req.headers) : null;
     final body = options.logBody ? _maskBody(req.body.value) : null;
 
-    print('╔══════════ SDK REQUEST ══════════');
-    print('║ METHOD: ${req.method}');
-    print('║ URL: ${req.endpoint}');
-    print('║ QUERY: ${req.query}');
-    if (headers != null) print('║ HEADERS: $headers');
-    if (body != null) print('║ BODY: $body');
-    print('╚═════════════════════════════════');
+    _log('╔══════════ SDK REQUEST ══════════');
+    _log('║ METHOD: ${req.method}');
+    _log('║ URL: ${req.endpoint}');
+    _log('║ QUERY: ${req.query}');
+    if (headers != null) _log('║ HEADERS: $headers');
+    if (body != null) _log('║ BODY: $body');
+    _log('╚═════════════════════════════════');
 
     return req;
   }
@@ -34,13 +35,13 @@ class BuiltInLoggingInterceptor implements SdkInterceptor {
     final headers = options.logHeaders ? res.headers : null;
     final data = options.logBody ? _maskBody(res.data) : null;
 
-    print('╔══════════ SDK RESPONSE ═════════');
-    print('║ METHOD: ${req.method}');
-    print('║ URL: ${req.endpoint}');
-    print('║ STATUS: ${res.statusCode}');
-    if (headers != null) print('║ HEADERS: $headers');
-    if (data != null) print('║ RESPONSE: $data');
-    print('╚═════════════════════════════════');
+    _log('╔══════════ SDK RESPONSE ═════════');
+    _log('║ METHOD: ${req.method}');
+    _log('║ URL: ${req.endpoint}');
+    _log('║ STATUS: ${res.statusCode}');
+    if (headers != null) _log('║ HEADERS: $headers');
+    if (data != null) _log('║ RESPONSE: $data');
+    _log('╚═════════════════════════════════');
 
     return res;
   }
@@ -49,18 +50,22 @@ class BuiltInLoggingInterceptor implements SdkInterceptor {
   Future<SdkError?> onError(HttpRequest req, SdkError error) async {
     if (!options.enabled) return error;
 
-    print('╔══════════ SDK ERROR ════════════');
-    print('║ METHOD: ${req.method}');
-    print('║ URL: ${req.endpoint}');
-    print('║ STATUS: ${error.statusCode}');
-    print('║ TYPE: ${error.type}');
-    print('║ MESSAGE: ${error.message}');
+    _log('╔══════════ SDK ERROR ════════════');
+    _log('║ METHOD: ${req.method}');
+    _log('║ URL: ${req.endpoint}');
+    _log('║ STATUS: ${error.statusCode}');
+    _log('║ TYPE: ${error.type}');
+    _log('║ MESSAGE: ${error.message}');
     if (options.logBody && error.raw != null) {
-      print('║ RAW: ${_maskBody(error.raw)}');
+      _log('║ RAW: ${_maskBody(error.raw)}');
     }
-    print('╚═════════════════════════════════');
+    _log('╚═════════════════════════════════');
 
     return error;
+  }
+
+  void _log(String message) {
+    developer.log(message, name: 'network_api_sdk');
   }
 
   Map<String, String>? _maskHeaders(Map<String, String>? headers) {
