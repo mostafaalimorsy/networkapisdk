@@ -407,7 +407,8 @@ class SdkCall {
 
     return const SdkError(
       type: ErrorType.offline,
-      message: 'Network request failed. Please check your connection and try again.',
+      message:
+          'Network request failed. Please check your connection and try again.',
     );
   }
 }
