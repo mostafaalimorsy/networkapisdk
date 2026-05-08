@@ -8,6 +8,7 @@ import '../config/sdk_config.dart';
 import '../http/dio_http_client.dart';
 import '../http/http_client.dart';
 import '../interceptors/interceptor_runner.dart';
+import '../interceptors/built_in_logging_interceptor.dart';
 import '../offline/cache_store.dart';
 import '../offline/queue_store.dart';
 import '../offline/sdk_queue.dart';
@@ -37,6 +38,8 @@ class Sdk {
   Sdk._(this.config);
 
   static Sdk? _instance;
+
+  bool _sessionExpiredHandled = false;
 
   /// Resets the singleton for tests.
   ///
@@ -108,13 +111,48 @@ class Sdk {
   /// token store is cleared.
   Future<void> signOut({bool emitEvent = true}) async {
     await authManager.clear();
+    _sessionExpiredHandled = false;
     if (emitEvent) events.emit(SdkEvent.signedOut);
+  }
+
+  /// Handles a terminal session expiration exactly once until the session state
+  /// is reset by a later successful auth flow.
+  Future<void> handleSessionExpired({
+    Future<void> Function()? onSessionExpired,
+    bool emitEvent = true,
+  }) async {
+    if (_sessionExpiredHandled) return;
+    _sessionExpiredHandled = true;
+
+    await authManager.clear();
+
+    if (emitEvent) {
+      events.emit(SdkEvent.sessionExpired);
+    }
+
+    if (onSessionExpired != null) {
+      await onSessionExpired();
+    }
+  }
+
+  /// Allows future session-expiration handling after a successful login or
+  /// refresh updates the active session.
+  void resetSessionExpiredHandling() {
+    _sessionExpiredHandled = false;
   }
 
   void _boot() {
     // Core utilities first (used by call/auth)
     events = SdkEvents();
-    interceptors = InterceptorRunner(config.interceptors);
+    final mergedInterceptors = [...config.interceptors];
+
+    if (config.logging.enabled) {
+      mergedInterceptors.add(
+        BuiltInLoggingInterceptor(config.logging),
+      );
+    }
+
+    interceptors = InterceptorRunner(mergedInterceptors);
 
     authManager = AuthManager(
       config.tokenStoreOverride ?? const SecureTokenStore(),
@@ -128,6 +166,7 @@ class Sdk {
     http = config.httpOverride ?? DioHttpClient(baseUrl: config.baseUrl);
     call = SdkCall.internal(this);
     auth = SdkAuth.internal(this);
+    _sessionExpiredHandled = false;
 
     // Queue last (depends on http/auth/events in practice)
     queue = SdkQueue.internal(this, queueStore);

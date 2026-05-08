@@ -13,7 +13,7 @@ class SdkAuth {
   /// Internal constructor used by [Sdk].
   SdkAuth.internal(this._sdk);
 
-  /// Logs in with [body] and stores the returned tokens.
+  /// Logs in with [body] and stores the returned tokens for the current session.
   ///
   /// This sends a `POST` request to the configured login endpoint with
   /// [RequestBody.json] and `attachAuth: false`. On success, tokens are
@@ -68,10 +68,7 @@ class SdkAuth {
     final access = _readPath(data, opts.accessTokenPath)?.toString();
     final refresh = _readPath(data, opts.refreshTokenPath)?.toString();
 
-    if (access == null ||
-        access.isEmpty ||
-        refresh == null ||
-        refresh.isEmpty) {
+    if (access == null || access.isEmpty || refresh == null || refresh.isEmpty) {
       return SdkResponse(
         ok: false,
         statusCode: res.statusCode,
@@ -94,12 +91,24 @@ class SdkAuth {
     return res;
   }
 
+  /// Returns `true` when a non-empty access token is available.
+  ///
+  /// This checks the current in-memory session first, then falls back to any
+  /// persisted auth state in the configured token store. It does not validate
+  /// token expiry.
+  Future<bool> isLoggedIn() async {
+    final pair = await _sdk.authManager.load();
+    final accessToken = pair?.accessToken;
+
+    return accessToken != null && accessToken.isNotEmpty;
+  }
+
   /// Refreshes the current session using the stored refresh token.
   ///
   /// Returns the new [TokenPair] when refresh succeeds, or `null` when auth is
   /// not configured, no refresh token exists, the refresh call fails, or token
-  /// extraction fails. Successful refreshes are persisted with
-  /// `rememberMe: true`.
+  /// extraction fails. Successful refreshes keep the current session
+  /// persistence behavior managed by [AuthManager].
   Future<TokenPair?> refresh() async {
     final opts = _sdk.config.auth;
     if (opts == null) return null;
@@ -122,19 +131,18 @@ class SdkAuth {
     final access = _readPath(data, opts.accessTokenPath)?.toString();
     final refresh = _readPath(data, opts.refreshTokenPath)?.toString();
 
-    if (access == null ||
-        access.isEmpty ||
-        refresh == null ||
-        refresh.isEmpty) {
+    if (access == null || access.isEmpty || refresh == null || refresh.isEmpty) {
       return null;
     }
 
     final pair = TokenPair(accessToken: access, refreshToken: refresh);
-    await _sdk.authManager.save(pair, rememberMe: true);
+    await _sdk.authManager.save(pair, rememberMe: _sdk.authManager.rememberMe);
     return pair;
   }
 
-  /// Saves tokens directly to the configured [TokenStore].
+  /// Saves tokens directly for the current session.
+  ///
+  /// Persistent storage is controlled by [rememberMe].
   Future<void> saveTokens({
     required String accessToken,
     required String refreshToken,
@@ -175,6 +183,5 @@ class SdkAuth {
   }
 
   /// Alias for [signOut].
-  Future<void> clearSession({bool emitEvent = true}) =>
-      signOut(emitEvent: emitEvent);
+  Future<void> clearSession({bool emitEvent = true}) => signOut(emitEvent: emitEvent);
 }

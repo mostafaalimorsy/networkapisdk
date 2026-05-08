@@ -1,3 +1,16 @@
+## 0.1.3
+
+- Added automatic session expiration handling.
+- Added `onSessionExpired` callback support in `SdkConfig`.
+- Added centralized session expiration lifecycle management.
+- Added automatic redirect support after refresh token failure.
+- Added login-state checking with `isLoggedIn()`.
+- Improved refresh token retry flow and session recovery handling.
+- Fixed potential race condition in token loading and refresh flow.
+- Improved authentication lifecycle reliability for both persistent and in-memory sessions.
+- Improved logging implementation using `dart:developer` instead of `print`.
+- Updated README documentation and authentication flow diagrams.
+
 ## 0.1.2
 
 - Improved documentation and README clarity

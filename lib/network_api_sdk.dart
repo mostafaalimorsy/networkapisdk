@@ -31,6 +31,9 @@ export 'src/core/sdk_events.dart' show SdkEvents, SdkEvent;
 // Interceptors
 export 'src/interceptors/sdk_interceptor.dart';
 
+//log
+export 'src/config/logging_options.dart';
+
 // HTTP extension points
 export 'src/http/http_client.dart';
 export 'src/http/dio_http_client.dart';
